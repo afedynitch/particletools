@@ -58,9 +58,14 @@ class PYTHIAParticleData():
         import xml.etree.ElementTree as ET
         import os
         import numpy as np
-        xmlname = 'ParticleData.xml'
-        if not os.path.isfile(xmlname):
-            xmlname = '../ParticleDataTool/ParticleData.xml'
+        xmlname = None
+        for p in searchpaths:
+            if os.path.isfile(p):
+                xmlname = p
+                break
+        if xmlname == None:
+            raise Exception('ParticleDataTool::_load_xml(): ' +
+                'XML file not found.')
         root = ET.parse(xmlname).getroot()
         self.pytname2data = {}
         self.pdg_id2data = {}
