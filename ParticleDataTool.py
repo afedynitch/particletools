@@ -339,8 +339,7 @@ class InteractionModelParticleTable():
                 self.modname2pdg[prefix + lepname] = -idxadd + lepidx
                 antial_idxs.append(-idxadd + lepidx)
         
-        self.leptons = list(zip(*leptons)[1] + zip(*antileptons)[1])
-        self.leptons += al_idxs + antial_idxs
+        self.leptons = al_idxs + antial_idxs
     
     def get_list_of_mesons(self, use_pdg=False):
         """Returns list of meson names or PDG IDs.

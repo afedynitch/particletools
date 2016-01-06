@@ -1,3 +1,4 @@
 *.ppl
 *.project
 *.pydev*
+*.pyc
