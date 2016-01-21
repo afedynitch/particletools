@@ -59,6 +59,10 @@ class PYTHIAParticleData():
         import os
         import numpy as np
         xmlname = None
+        base = os.path.dirname(os.path.abspath(__file__))
+        searchpaths = [base + '/ParticleData.xml',
+                       'ParticleData.xml','../ParticleData.xml',
+                       'ParticleDataTool/ParticleData.xml']
         for p in searchpaths:
             if os.path.isfile(p):
                 xmlname = p
