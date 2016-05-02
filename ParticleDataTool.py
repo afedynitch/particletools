@@ -199,6 +199,16 @@ class PYTHIAParticleData():
                 pdg_id = self.str_alias_table[pdg_id]
             return float(self.pytname2data[pdg_id][1])
     
+    def force_stable(self, pdg_id):
+        """Edits the :math:`ctau` value
+        
+        Args:
+          pdg_id (int): particle PDG ID
+        """
+        import numpy as np
+        self.pdg_id2data[pdg_id] = (self.pdg_id2data[pdg_id][0],
+                                       np.inf)
+                                       
     def name(self, pdg_id):
         """Returns PYTHIA particle name.
 
