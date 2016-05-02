@@ -73,6 +73,7 @@ class PYTHIAParticleData():
         root = ET.parse(xmlname).getroot()
         self.pytname2data = {}
         self.pdg_id2data = {}
+        self.branchings = {}
         GeVfm = 0.19732696312541853
         for child in root:
             if child.tag == 'particle':
@@ -98,6 +99,19 @@ class PYTHIAParticleData():
                     self.pdg_id2data[-pdgid] = (m0, ctau, child.attrib['antiName'], -charge)
                 except:
                     pass
+                #Extract branching ratios and decay channels
+                self.branchings[pdgid] = []
+                self.branchings[-pdgid] = []
+                for channel in child:
+                    if channel.attrib['onMode'] == '1':
+                        self.branchings[pdgid].append((
+                            float(channel.attrib['bRatio']),
+                            [int(p) for p in channel.attrib['products'].split(' ')
+                                if p != '']))
+                        self.branchings[-pdgid].append((
+                            float(channel.attrib['bRatio']),
+                            [-int(p) for p in channel.attrib['products'].split(' ')
+                                if p != '']))
                 
         self.extend_tables()
         if not use_cache:
@@ -163,7 +177,28 @@ class PYTHIAParticleData():
                 str_id = self.str_alias_table[str_id]
          
         return int(self.pytname2data[str_id][2])
-    
+ 
+    def decay_channels(self, pdg_id):
+        """Returns decay channels as list of tuples.
+
+        Warning, this function reflects only the status in PYTHIA and 
+        is not a representation of PDG. Be warned!
+
+        Args:
+          pdg_id (int): particle PDG ID
+        
+        Returns:
+          (list): (BR-ratio,[prod1, prod2, ...])
+        """
+        
+        try:
+            return self.branchings[pdg_id]
+        except:
+            if pdg_id in self.str_alias_table:
+                pdg_id = self.str_alias_table[pdg_id]
+            return self.branchings[pdg_id]
+
+
     def mass(self, pdg_id):
         """Returns particle mass in GeV. The mass is calculated from
         the width if not given in the XML table.
@@ -208,7 +243,7 @@ class PYTHIAParticleData():
         import numpy as np
         self.pdg_id2data[pdg_id] = (self.pdg_id2data[pdg_id][0],
                                        np.inf)
-                                       
+                             
     def name(self, pdg_id):
         """Returns PYTHIA particle name.
 
@@ -516,6 +551,25 @@ def print_stable(life_time_greater_then=1e-10):
             print templ.format(pname, pyth_data.ctau(pname),
                                pyth_data.pdg_id(pname))    
 
+def print_decay_channels(pdgid, pyth_data=None):
+    """Prints branching ratios and decay channels from PYTHIA data."""
+    if pyth_data == None:
+        pyth_data = PYTHIAParticleData()
+    
+    dec_list = pyth_data.decay_channels(pdgid)
+
+    print "{0} decays into:".format(pyth_data.name(pdgid))
+    for br, prods in sorted(dec_list,reverse=True):
+        prod_list = []
+        for p in prods:
+            try:
+                prod_list.append(pyth_data.name(p))
+            except KeyError:
+                prod_list.append('*' + str(p))
+        prod_list = ', '.join(prod_list)
+        print "\t {0}%, {1}".format(br*100.,prod_list)
+
+
 def make_stable_list(life_time_greater_then):
     """Returns a list of particles PDG IDs with a lifetime longer than
     specified argument value in s. Stable particles, such as photons,
@@ -560,6 +614,7 @@ def test():
         line = "SIBYLL ID: {0}\t SIBYLL name: {1:12s}\tPDG ID: {2}\t PYTHIA name {3}"
         pdg_id = sibtab.modid2pdg[sib_id]
         print line.format(sib_id, sibtab.modid2modname[sib_id], pdg_id, pyth_data.pdg_id2data[pdg_id][2])
+        print print_decay_channels(pdg_id, pyth_data)
 
             
 if __name__ == '__main__':
