@@ -125,44 +125,14 @@ class PYTHIAParticleData():
         """Inserts aliases for MCEq.
         """
         # 70XX prompt leptons
-        self.pdg_id2data[7012] = self.pdg_id2data[12]
-        self.pdg_id2data[7013] = self.pdg_id2data[13]
-        self.pdg_id2data[7014] = self.pdg_id2data[14]
-        self.pdg_id2data[7016] = self.pdg_id2data[16]
-        self.pdg_id2data[-7012] = self.pdg_id2data[-12]
-        self.pdg_id2data[-7013] = self.pdg_id2data[-13]
-        self.pdg_id2data[-7014] = self.pdg_id2data[-14]
-        self.pdg_id2data[-7016] = self.pdg_id2data[-16]
-        
         # 71XX leptons from pion decay
-        self.pdg_id2data[7112] = self.pdg_id2data[12]
-        self.pdg_id2data[7113] = self.pdg_id2data[13]
-        self.pdg_id2data[7114] = self.pdg_id2data[14]
-        self.pdg_id2data[7116] = self.pdg_id2data[16]
-        self.pdg_id2data[-7112] = self.pdg_id2data[-12]
-        self.pdg_id2data[-7113] = self.pdg_id2data[-13]
-        self.pdg_id2data[-7114] = self.pdg_id2data[-14]
-        self.pdg_id2data[-7116] = self.pdg_id2data[-16]
-        
         # 72XX leptons from kaon decay
-        self.pdg_id2data[7212] = self.pdg_id2data[12]
-        self.pdg_id2data[7213] = self.pdg_id2data[13]
-        self.pdg_id2data[7214] = self.pdg_id2data[14]
-        self.pdg_id2data[7216] = self.pdg_id2data[16]
-        self.pdg_id2data[-7212] = self.pdg_id2data[-12]
-        self.pdg_id2data[-7213] = self.pdg_id2data[-13]
-        self.pdg_id2data[-7214] = self.pdg_id2data[-14]
-        self.pdg_id2data[-7216] = self.pdg_id2data[-16]
-        
-        # 73XX multi-purpose category 
-        self.pdg_id2data[7312] = self.pdg_id2data[12]
-        self.pdg_id2data[7313] = self.pdg_id2data[13]
-        self.pdg_id2data[7314] = self.pdg_id2data[14]
-        self.pdg_id2data[7316] = self.pdg_id2data[16]
-        self.pdg_id2data[-7312] = self.pdg_id2data[-12]
-        self.pdg_id2data[-7313] = self.pdg_id2data[-13]
-        self.pdg_id2data[-7314] = self.pdg_id2data[-14]
-        self.pdg_id2data[-7316] = self.pdg_id2data[-16]
+        # 73XX multi-purpose category
+        for a_id in [7000, 7100, 7200, 7300]:
+            for l_id in [11, 12, 13, 14, 16]:
+
+                self.pdg_id2data[a_id + l_id] = self.pdg_id2data[l_id]
+                self.pdg_id2data[-(a_id + l_id)] = self.pdg_id2data[-l_id]
     
     def pdg_id(self, str_id):
         """Returns PDG particle ID.
@@ -347,8 +317,7 @@ class InteractionModelParticleTable():
         self.extend_tables()
         
         self.mesons = [m for m in self.get_list_of_mesons(use_pdg=True) 
-                       if not (10 < abs(m) < 15 or abs(m) == 16 or abs(m) == 22
-                       or m in self.leptons)] 
+                       if not (10 < abs(m) < 15 or abs(m) == 16 or m in self.leptons)] 
         self.baryons = self.get_list_of_baryons(use_pdg=True)
         
         
@@ -360,12 +329,14 @@ class InteractionModelParticleTable():
         for subsequent calls. Additional categories have to be 
         added here first, prior modifying MCEq.
         """
-        leptons = [('nue', 12),
+        leptons = [('e-', 11),
+                   ('nue', 12),
                    ('mu-', 13),
                    ('numu', 14),
                    ('nutau', 16)]
         
-        antileptons = [('antinue', -12),
+        antileptons = [('e+', -11),
+                       ('antinue', -12),
                        ('mu+', -13),
                        ('antinumu', -14),
                        ('antinutau', -16)]
@@ -463,6 +434,7 @@ class SibyllParticleTable(InteractionModelParticleTable):
         # similar behavior to mesons in current applications of this module
          
         for name, (modid, pdgid) in self.part_table.iteritems():
+            print name
             if (modid not in self.baryon_range and (abs(pdgid) > 100 
                                                     or abs(pdgid) == 15)):
                 self.meson_range.append(modid)
