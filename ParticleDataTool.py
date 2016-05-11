@@ -434,7 +434,6 @@ class SibyllParticleTable(InteractionModelParticleTable):
         # similar behavior to mesons in current applications of this module
          
         for name, (modid, pdgid) in self.part_table.iteritems():
-            print name
             if (modid not in self.baryon_range and (abs(pdgid) > 100 
                                                     or abs(pdgid) == 15
                                                     or abs(pdgid) == 22)):
