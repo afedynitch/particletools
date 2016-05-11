@@ -436,7 +436,8 @@ class SibyllParticleTable(InteractionModelParticleTable):
         for name, (modid, pdgid) in self.part_table.iteritems():
             print name
             if (modid not in self.baryon_range and (abs(pdgid) > 100 
-                                                    or abs(pdgid) == 15)):
+                                                    or abs(pdgid) == 15
+                                                    or abs(pdgid) == 22)):
                 self.meson_range.append(modid)
         self.meson_range.sort()
         
