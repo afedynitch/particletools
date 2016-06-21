@@ -213,6 +213,11 @@ class PYTHIAParticleData():
         import numpy as np
         self.pdg_id2data[pdg_id] = (self.pdg_id2data[pdg_id][0],
                                        np.inf)
+
+        if abs(pdg_id) in [11, 12, 13, 14, 16]:
+            for a_id in [7000, 7100, 7200, 7300]:
+                self.pdg_id2data[np.sign(a_id + pdg_id)] = \
+                    self.pdg_id2data[pdg_id]
                              
     def name(self, pdg_id):
         """Returns PYTHIA particle name.
