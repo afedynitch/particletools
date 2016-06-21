@@ -215,7 +215,6 @@ class PYTHIAParticleData():
                                        np.inf)
         if abs(pdg_id) in [11, 12, 13, 14, 16]:
             for a_id in [7000, 7100, 7200, 7300]:
-                print np.sign(pdg_id)*(a_id) + pdg_id, self.pdg_id2data[pdg_id]
                 self.pdg_id2data[np.sign(pdg_id)*a_id + pdg_id] = \
                     self.pdg_id2data[pdg_id]
                              
