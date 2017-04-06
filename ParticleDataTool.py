@@ -333,7 +333,7 @@ class InteractionModelParticleTable():
         for subsequent calls. Additional categories have to be 
         added here first, prior modifying MCEq.
         """
-                leptons = [#('e-', 11),
+        leptons = [#('e-', 11),
                    ('nue', 12),
                    ('mu-', 13),
                    ('numu', 14),
