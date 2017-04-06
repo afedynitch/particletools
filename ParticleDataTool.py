@@ -333,13 +333,13 @@ class InteractionModelParticleTable():
         for subsequent calls. Additional categories have to be 
         added here first, prior modifying MCEq.
         """
-        leptons = [('e-', 11),
+                leptons = [#('e-', 11),
                    ('nue', 12),
                    ('mu-', 13),
                    ('numu', 14),
                    ('nutau', 16)]
         
-        antileptons = [('e+', -11),
+        antileptons = [#('e+', -11),
                        ('antinue', -12),
                        ('mu+', -13),
                        ('antinumu', -14),
@@ -363,7 +363,13 @@ class InteractionModelParticleTable():
                 self.modname2pdg[prefix + lepname] = -idxadd + lepidx
                 antial_idxs.append(-idxadd + lepidx)
         
-        self.leptons = al_idxs + antial_idxs
+        # Don't add aliases for electrons just the particles
+        self.pdg2modname[-11] = 'e+'
+        self.pdg2modname[11] = 'e-'
+        self.modname2pdg['e-'] = 11
+        self.modname2pdg['e+'] = 11 
+        
+        self.leptons = al_idxs + antial_idxs + [11, -11]
     
     def get_list_of_mesons(self, use_pdg=False):
         """Returns list of meson names or PDG IDs.
@@ -430,6 +436,8 @@ class SibyllParticleTable(InteractionModelParticleTable):
                 temp_dict[name + '-bar'] = (-modid, -pdgid)
                 self.baryon_range.append(modid)
                 self.baryon_range.append(-modid)
+            # if abs(modid) > 58:
+            #     temp_dict['QCD_']
         self.baryon_range.sort()
         self.part_table.update(temp_dict)
         
