@@ -38,7 +38,7 @@ class PYTHIAParticleData(object):
         import cPickle as pickle
         try:
             self.pytname2data, self.pdg_id2data, self.branchings = pickle.load(
-                open('ParticleData.ppl', 'r'))
+                open('ParticleData.ppl', 'rb'))
         except IOError:
             self._load_xml(file_path, use_cache)
 
@@ -147,7 +147,7 @@ class PYTHIAParticleData(object):
         import cPickle as pickle
         pickle.dump(
             (self.pytname2data, self.pdg_id2data, self.branchings),
-            open(file_path, 'w'),
+            open(file_path, 'wb'),
             protocol=-1)
 
     def extend_tables(self):
@@ -210,7 +210,7 @@ class PYTHIAParticleData(object):
 
         try:
             return float(self.pdg_id2data[pdg_id][0])
-        except ValueError:
+        except KeyError:
             if pdg_id in self.str_alias_table:
                 pdg_id = self.str_alias_table[pdg_id]
             return float(self.pytname2data[pdg_id][0])
@@ -227,7 +227,7 @@ class PYTHIAParticleData(object):
 
         try:
             return float(self.pdg_id2data[pdg_id][1])
-        except ValueError:
+        except KeyError:
             if pdg_id in self.str_alias_table:
                 pdg_id = self.str_alias_table[pdg_id]
             return float(self.pytname2data[pdg_id][1])
