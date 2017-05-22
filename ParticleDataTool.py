@@ -36,10 +36,13 @@ class PYTHIAParticleData(object):
 
     def __init__(self, file_path='ParticleData.ppl', use_cache=True):
         import cPickle as pickle
+        import os
         try:
             self.pytname2data, self.pdg_id2data, self.branchings = pickle.load(
-                open('ParticleData.ppl', 'rb'))
-        except IOError:
+                open(file_path, 'rb'))
+        except IOError, UnpicklingError:
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
             self._load_xml(file_path, use_cache)
 
         # : name aliases for backward compatibility
