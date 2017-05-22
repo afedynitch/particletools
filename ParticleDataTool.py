@@ -22,6 +22,9 @@ Example:
 '''
 
 from abc import ABCMeta
+import os
+
+pdata_basedir = os.path.dirname(os.path.abspath(__file__))
 
 
 #===============================================================================
@@ -36,7 +39,9 @@ class PYTHIAParticleData(object):
 
     def __init__(self, file_path='ParticleData.ppl', use_cache=True):
         import cPickle as pickle
-        import os
+
+        file_path = os.path.join(pdata_basedir, file_path)
+
         try:
             self.pytname2data, self.pdg_id2data, self.branchings = pickle.load(
                 open(file_path, 'rb'))
