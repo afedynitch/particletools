@@ -409,7 +409,7 @@ class InteractionModelParticleTable():
         self.modname2pdg['e-'] = 11
         self.modname2pdg['e+'] = 11
 
-        self.leptons = al_idxs + antial_idxs + [11, -11]
+        self.leptons = al_idxs + antial_idxs + [11, -11] + [22]
 
     def get_list_of_mesons(self, use_pdg=False):
         """Returns list of meson names or PDG IDs.
