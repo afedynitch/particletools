@@ -555,6 +555,8 @@ class UrQMDParticleTable(InteractionModelParticleTable):
     IDs+isospins/names to PDG IDs and vice versa.
 
     The table part_table is written by hand from the manual of UrQMD 3.4.
+
+    Author: Sonia El Hedri (github:soso128)
     """
 
     def __init__(self):
