@@ -550,6 +550,108 @@ class SibyllParticleTable(InteractionModelParticleTable):
 
         InteractionModelParticleTable.__init__(self)
 
+class UrQMDParticleTable(InteractionModelParticleTable):
+    """This derived class provides conversions from UrQMD particle
+    IDs+isospins/names to PDG IDs and vice versa.
+
+    The table part_table is written by hand from the manual of UrQMD 3.4.
+    """
+
+    def __init__(self):
+        self.part_table = {
+            'gamma': ((100, 0), 22),
+            'pi0': ((101, 0), 111),
+            'pi+': ((101, 2), 211),
+            'pi-': ((101, -2), -211),
+            'K+': ((106, 1), 321),
+            'K-': ((106, -1), -321),
+            # 'K0L': (11, 130),
+            # 'K0S': (12, 310),
+            'p': ((1, 1), 2212),
+            'p-bar': ((1, -1), -2212),
+            'n': ((1, 0), 2112),
+            'eta': ((102, 0), 221),
+            # 'eta*': ((1), 331),
+            'rho+': ((104, 2), 213),
+            'rho-': ((104, -2), -213),
+            'rho0': ((104, 0), 113),
+            'K*+': ((108, 2), 323),
+            'K*-': ((108, -2), -323),
+            'K*0': ((108, 0), 313),
+            'K*0-bar': ((-108, 0), -313),
+            'omega': ((103, 0), 223),
+            'phi': ((109, 0), 333),
+            'Sigma+': ((40, 2), 3222),
+            'Sigma0': ((40, 0), 3212),
+            'Sigma-': ((40, -2), 3112),
+            'Xi0': ((49, 0), 3322),
+            'Xi-': ((49, -1), 3312),
+            'Lambda0': ((27, 0), 3122),
+            'Delta++': ((17, 4), 2224),
+            'Delta+': ((17, 2), 2214),
+            'Delta0': ((17, 0), 2114),
+            'Delta-': ((17, -2), 1114),
+            'Sigma*+': ((41, 2), 3224),
+            'Sigma*0': ((41, 0), 3214),
+            'Sigma*-': ((41, -2), 3114),
+            'Xi*0': ((50, 0), 3324),
+            'Xi*-': ((50, -1), 3314),
+            'Omega-': ((55, 0), 3334),
+            'D+': ((133, 2), 411),
+            'D-': ((133, -2), -411),
+            'D0': ((133, 0), 421),
+            'D0-bar': ((-133, 0), -421),
+            'etaC': ((107, 0), 441),
+            'Ds+': ((138, 1), 431),
+            'Ds-': ((138, -1), -431),
+            'Ds*+': ((139, 1), 433),
+            'Ds*-': ((139, -1), -433),
+            'D*+': ((134, 1), 413),
+            'D*-': ((134, -1), -413),
+            'D*0': ((134, 0), 10421),
+            'D*0-bar': ((-134, 0), -10421),
+            'jpsi': ((135, 0), 443),
+            # 'SigmaC++': (84, 4222),
+            # 'SigmaC+': (85, 4212),
+            # 'SigmaC0': (86, 4112),
+            # 'XiC+': (87, 4232),
+            # 'XiC0': (88, 4132),
+            # 'LambdaC+': (89, 4122),
+            # 'SigmaC*++': (94, 4224),
+            # 'SigmaC*+': (95, 4214),
+            # 'SigmaC*0': (96, 4114),
+            # 'XiC*+': (97, 4324),
+            # 'XiC*0': (98, 4314),
+            # 'OmegaC0': (99, 4332)
+        }
+
+        self.baryon_range = []
+        temp_dict = {}
+        for name, (modid, pdgid) in self.part_table.iteritems():
+            if (abs(pdgid) > 1000) and (abs(pdgid) < 7000) and abs(pdgid) != 2212:
+                if type(modid) == int:
+                    temp_dict[name + '-bar'] = (-modid, -pdgid)
+                else:
+                    temp_dict[name + '-bar'] = ((-modid[0], modid[1]), -pdgid)
+                self.baryon_range.append(modid)
+                self.baryon_range.append(-modid if type(modid) == int
+                                        else (-modid[0], modid[1]))
+            # if abs(modid) > 58:
+            #     temp_dict['QCD_']
+        self.baryon_range.sort()
+        self.part_table.update(temp_dict)
+
+        self.meson_range = []
+        # Force tau leptons into the meson group, since the tau lepton has
+        # similar behavior to mesons in current applications of this module
+
+        for name, (modid, pdgid) in self.part_table.iteritems():
+            if (modid not in self.baryon_range and
+                (abs(pdgid) > 100 or abs(pdgid) == 15 or abs(pdgid) == 22)):
+                self.meson_range.append(modid)
+        self.meson_range.sort()
+
+        InteractionModelParticleTable.__init__(self)
 
 class QGSJetParticleTable(InteractionModelParticleTable):
     """This derived class provides conversions from QGSJET particle
