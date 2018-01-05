@@ -570,8 +570,8 @@ class UrQMDParticleTable(InteractionModelParticleTable):
             # 'K0L': (11, 130),
             # 'K0S': (12, 310),
             'p': ((1, 1), 2212),
-            'p-bar': ((1, -1), -2212),
-            'n': ((1, 0), 2112),
+            # 'p-bar': ((-1, -1), -2212),
+            'n': ((1, -1), 2112),
             'eta': ((102, 0), 221),
             # 'eta*': ((1), 331),
             'rho+': ((104, 2), 213),
@@ -630,7 +630,7 @@ class UrQMDParticleTable(InteractionModelParticleTable):
         self.baryon_range = []
         temp_dict = {}
         for name, (modid, pdgid) in self.part_table.iteritems():
-            if (abs(pdgid) > 1000) and (abs(pdgid) < 7000) and abs(pdgid) != 2212:
+            if (abs(pdgid) > 1000) and (abs(pdgid) < 7000):
                 if type(modid) == int:
                     temp_dict[name + '-bar'] = (-modid, -pdgid)
                 else:
