@@ -22,6 +22,9 @@ Example:
 '''
 
 from abc import ABCMeta
+from tempfile import TemporaryFile
+
+__particle_data__ = TemporaryFile()
 
 #===============================================================================
 # PYTHIAParticleData
@@ -33,13 +36,15 @@ class PYTHIAParticleData():
     a pickled PYTHON representation of this parsed XML.
     
     """
-    def __init__(self, file_path='ParticleData.ppl', use_cache=True):
+    def __init__(self, cache_file=__particle_data__, use_cache=True):
         import cPickle as pickle
-        try:
-            self.pytname2data, self.pdg_id2data = pickle.load(open('ParticleData.ppl', 'r'))
-        except:
-            self._load_xml(file_path, use_cache)
-        
+        if use_cache:
+            try:
+                self.pytname2data, self.pdg_id2data = pickle.load(cache_file)
+            except:
+                pass
+        self._load_xml(cache_file, use_cache)
+
         # : name aliases for backward compatibility
         self.str_alias_table = \
         {'K0L':'K_L0', 'K0S':'K_S0', 'Lambda':'Lambda0',
@@ -51,7 +56,7 @@ class PYTHIAParticleData():
          'SigmaC*++':'Sigma*_c++', 'SigmaC*+':'Sigma*_c+', 'SigmaC*0':'Sigma*_c0',
          'SigmaC--':'Sigma_c--', 'SigmaC-':'Sigma_c-'}
     
-    def _load_xml(self, file_path, use_cache):
+    def _load_xml(self, cache_file, use_cache):
         """Reads the xml and pics out particle data only. If no decay length
         is given, it will calculated from the width."""
          
@@ -105,7 +110,7 @@ class PYTHIAParticleData():
         
         import cPickle as pickle
         pickle.dump((self.pytname2data, self.pdg_id2data),
-                    open(file_path, 'w'), protocol=-1)
+                    cache_file, protocol=-1)
                 
     def extend_tables(self):
         """Inserts aliases for MCEq.
