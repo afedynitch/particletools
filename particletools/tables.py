@@ -20,6 +20,8 @@ Example:
       $ import ParticleDataTool as pd
       $ pd.test()
 '''
+from __future__ import print_function
+import six
 
 from abc import ABCMeta
 from tempfile import TemporaryFile
@@ -38,7 +40,7 @@ class PYTHIAParticleData(object):
     """
 
     def __init__(self, cache_file=__particle_data__, use_cache=True):
-        import cPickle as pickle
+        import pickle
         if use_cache:
             try:
                 self.pytname2data, self.pdg_id2data = pickle.load(cache_file)
@@ -63,7 +65,7 @@ class PYTHIAParticleData(object):
 
         import xml.etree.ElementTree as ET
         import os
-        import numpy as np
+
         xmlname = None
         base = os.path.dirname(os.path.abspath(__file__))
         searchpaths = [
@@ -97,7 +99,7 @@ class PYTHIAParticleData(object):
                 elif child.attrib['id'] in [
                         "2212", "22", "11", "12", "14", "16"
                 ]:
-                    ctau = np.inf
+                    ctau = float('Inf')
                 else:
                     continue
                 pdgid = int(child.attrib['id'])
@@ -136,7 +138,7 @@ class PYTHIAParticleData(object):
         if not use_cache:
             return
 
-        import cPickle as pickle
+        import pickle
         pickle.dump(
             (self.pytname2data, self.pdg_id2data), cache_file, protocol=-1)
 
@@ -228,11 +230,12 @@ class PYTHIAParticleData(object):
         Args:
           pdg_id (int): particle PDG ID
         """
-        import numpy as np
-        self.pdg_id2data[pdg_id] = (self.pdg_id2data[pdg_id][0], np.inf)
+        import math
+
+        self.pdg_id2data[pdg_id] = (self.pdg_id2data[pdg_id][0], float('Inf'))
         if abs(pdg_id) in [11, 12, 13, 14, 16]:
             for a_id in [7000, 7100, 7200, 7300]:
-                self.pdg_id2data[np.sign(pdg_id)*a_id + pdg_id] = \
+                self.pdg_id2data[math.copysign(a_id,pdg_id) + pdg_id] = \
                     self.pdg_id2data[pdg_id]
 
     def name(self, pdg_id):
@@ -265,7 +268,7 @@ class PYTHIAParticleData(object):
         try:
             return float(self.pdg_id2data[pdg_id][3])
         except ValueError:
-            print "Exception:", pdg_id
+            print("Exception:", pdg_id)
             if pdg_id in self.str_alias_table:
                 pdg_id = self.str_alias_table[pdg_id]
             return float(self.pytname2data[pdg_id][3])
@@ -311,7 +314,7 @@ class InteractionModelParticleTable():
                             '(): Error particle table not defined.')
 
         # Fill mapping dictionaries
-        for modname, pids in part_table.iteritems():
+        for modname, pids in six.iteritems(part_table):
             mod_id, pdg_id = pids
             self.modid2pdg[mod_id] = pdg_id
             self.pdg2modid[pdg_id] = mod_id
@@ -507,7 +510,7 @@ class SibyllParticleTable(InteractionModelParticleTable):
 
         self.baryon_range = []
         temp_dict = {}
-        for name, (modid, pdgid) in self.part_table.iteritems():
+        for name, (modid, pdgid) in six.iteritems(self.part_table):
             if (abs(pdgid) > 1000) and (abs(pdgid) < 7000):
                 temp_dict[name + '-bar'] = (-modid, -pdgid)
                 self.baryon_range.append(modid)
@@ -521,7 +524,7 @@ class SibyllParticleTable(InteractionModelParticleTable):
         # Force tau leptons into the meson group, since the tau lepton has
         # similar behavior to mesons in current applications of this module
 
-        for name, (modid, pdgid) in self.part_table.iteritems():
+        for name, (modid, pdgid) in six.iteritems(self.part_table):
             if (modid not in self.baryon_range and
                 (abs(pdgid) > 100 or abs(pdgid) == 15 or abs(pdgid) == 22)):
                 self.meson_range.append(modid)
@@ -609,7 +612,7 @@ class UrQMDParticleTable(InteractionModelParticleTable):
 
         self.baryon_range = []
         temp_dict = {}
-        for name, (modid, pdgid) in self.part_table.iteritems():
+        for name, (modid, pdgid) in six.iteritems(self.part_table):
             if (abs(pdgid) > 1000) and (abs(pdgid) < 7000):
                 if type(modid) == int:
                     temp_dict[name + '-bar'] = (-modid, -pdgid)
@@ -627,7 +630,7 @@ class UrQMDParticleTable(InteractionModelParticleTable):
         # Force tau leptons into the meson group, since the tau lepton has
         # similar behavior to mesons in current applications of this module
 
-        for name, (modid, pdgid) in self.part_table.iteritems():
+        for name, (modid, pdgid) in six.iteritems(self.part_table):
             if (modid not in self.baryon_range and
                 (abs(pdgid) > 100 or abs(pdgid) == 15 or abs(pdgid) == 22)):
                 self.meson_range.append(modid)
@@ -724,15 +727,15 @@ def print_stable(life_time_greater_then=1e-10):
     specified argument value in s."""
     pyth_data = PYTHIAParticleData()
 
-    print '\nKnown particles which lifetimes longer than {0:1.0e} s:\n'.format(
-        life_time_greater_then)
-    print '{0:20s}  {1:10s}  {2:8s}'.format('Name', 'ctau [cm]', 'PDG ID')
+    print(('\nKnown particles which lifetimes longer than {0:1.0e} s:\n').format(
+        life_time_greater_then))
+    print('{0:20s}  {1:10s}  {2:8s}'.format('Name', 'ctau [cm]', 'PDG ID'))
     templ = '{0:20s} {1:10.3g} {2:8}'
-    for pname in pyth_data.pytname2data.iterkeys():
+    for pname in six.iterkeys(pyth_data.pytname2data):
         if pyth_data.ctau(pname) >= life_time_greater_then * 2.99e10 and \
             pyth_data.pdg_id(pname) > 0:  # and pyth_data.ctau(pname) < 1e10:
-            print templ.format(pname, pyth_data.ctau(pname),
-                               pyth_data.pdg_id(pname))
+            print(templ.format(pname, pyth_data.ctau(pname),
+                               pyth_data.pdg_id(pname)))
 
 
 def print_decay_channels(pdgid, pyth_data=None):
@@ -742,7 +745,7 @@ def print_decay_channels(pdgid, pyth_data=None):
 
     dec_list = pyth_data.decay_channels(pdgid)
 
-    print "{0} decays into:".format(pyth_data.name(pdgid))
+    print("{0} decays into:".format(pyth_data.name(pdgid)))
     for br, prods in sorted(dec_list, reverse=True):
         prod_list = []
         for p in prods:
@@ -751,7 +754,7 @@ def print_decay_channels(pdgid, pyth_data=None):
             except KeyError:
                 prod_list.append('*' + str(p))
         prod_list = ', '.join(prod_list)
-        print "\t {0}%, {1}".format(br * 100., prod_list)
+        print("\t {0}%, {1}".format(br * 100., prod_list))
 
 
 def make_stable_list(life_time_greater_then):
@@ -762,7 +765,7 @@ def make_stable_list(life_time_greater_then):
     pyth_data = PYTHIAParticleData()
     particle_list = []
 
-    for pname in pyth_data.pytname2data.iterkeys():
+    for pname in six.iterkeys(pyth_data.pytname2data):
         if pyth_data.ctau(pname) >= life_time_greater_then * 2.99e10 and \
           pyth_data.ctau(pname) < 1e30:
             particle_list.append(pyth_data.pdg_id(pname))
@@ -774,35 +777,35 @@ def test():
     """Test driver to show how to use the classes of this module."""
     pyth_data = PYTHIAParticleData()
 
-    print "List all available particles except intermediate species"
-    for pname, pvalues in pyth_data.pytname2data.iteritems():
+    print("List all available particles except intermediate species")
+    for pname, pvalues in six.iteritems(pyth_data.pytname2data):
         if pname.find('~') == -1:
-            print('{name:18s}: m0[GeV] = {m0:10.3e}, ctau[cm] = {ctau:10.3e},'
+            print(('{name:18s}: m0[GeV] = {m0:10.3e}, ctau[cm] = {ctau:10.3e},'
                   + ' PDG_ID = {pdgid:10}, charge = {charge}').format(
                       name=pname,
                       m0=pvalues[0],
                       ctau=pvalues[1],
                       pdgid=pvalues[2],
-                      charge=pvalues[3])
+                      charge=pvalues[3]))
 
     # Or access data using the functions (e.g. list particles (without anti-particles
     # with lifetimes longer than D0)
-    print('\nKnown particles which lifetimes ' +
-          'longer than that of D0 ({0}cm).').format(pyth_data.ctau('D0'))
+    print('\nKnown particles which lifetimes', 
+        'longer than that of D0 ({0}cm).'.format(pyth_data.ctau('D0')))
     print_stable(pyth_data.ctau('D0') / 2.99e10)
 
-    print 'Example of a list of stable particles with tau < 1e-8s:', make_stable_list(
-        1e-8)
+    print('Example of a list of stable particles with tau < 1e-8s:', make_stable_list(
+        1e-8))
 
-    print "Example of index translation between model indices."
+    print("Example of index translation between model indices.")
     # Translate SIBYLL particle codes to PYTHIA/PDG conventions
     sibtab = SibyllParticleTable()
     for sib_id in sibtab.mod_ids:
         line = "SIBYLL ID: {0}\t SIBYLL name: {1:12s}\tPDG ID: {2}\t PYTHIA name {3}"
         pdg_id = sibtab.modid2pdg[sib_id]
-        print line.format(sib_id, sibtab.modid2modname[sib_id], pdg_id,
-                          pyth_data.pdg_id2data[pdg_id][2])
-    print 'List decay channels and branching ratios of Ds+'
+        print(line.format(sib_id, sibtab.modid2modname[sib_id], pdg_id,
+                          pyth_data.pdg_id2data[pdg_id][2]))
+    print('List decay channels and branching ratios of Ds+')
     print_decay_channels(431, pyth_data)
 
 
