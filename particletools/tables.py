@@ -1,8 +1,8 @@
 '''
-:mod:`ParticleDataTool` --- collection of classes dealing with particle properties and indices
+:mod:`particletools` --- collection of classes dealing with particle properties and indices
 ==============================================================================================
 
-This tool gives handy Python access to the particle database from the
+This tool gives convenient Python access to the particle database from the
 `PYTHIA 8 <http://home.thep.lu.se/~torbjorn/pythia81html/Welcome.html>`_ Monte Carlo.
 
 The general convention of my modules is to use Particle Data Group
@@ -22,16 +22,10 @@ Example:
 '''
 
 from abc import ABCMeta
-<<<<<<< HEAD:ParticleDataTool.py
-import os
-
-pdata_basedir = os.path.dirname(os.path.abspath(__file__))
-
-=======
 from tempfile import TemporaryFile
 
 __particle_data__ = TemporaryFile()
->>>>>>> 46282add2652df00ab445b3f79672c84c3b9b2ea:particletools/tables.py
+
 
 #===============================================================================
 # PYTHIAParticleData
@@ -42,48 +36,7 @@ class PYTHIAParticleData(object):
     It operates on in memory data after parsing the XML file or after reading
     a pickled PYTHON representation of this parsed XML.
     """
-<<<<<<< HEAD:ParticleDataTool.py
 
-    def __init__(self, file_path='ParticleData.ppl', use_cache=True):
-        import cPickle as pickle
-
-        file_path = os.path.join(pdata_basedir, file_path)
-
-        try:
-            self.pytname2data, self.pdg_id2data, self.branchings = pickle.load(
-                open(file_path, 'rb'))
-        except IOError, UnpicklingError:
-            if os.path.isfile(file_path):
-                os.unlink(file_path)
-            self._load_xml(file_path, use_cache)
-
-        # : name aliases for backward compatibility
-        self.str_alias_table = {
-            'K0L': 'K_L0',
-            'K0S': 'K_S0',
-            'Lambda': 'Lambda0',
-            'eta*': "eta'",
-            'etaC': 'eta_c',
-            'D*+': 'D*_0+',
-            'D*-': 'D*_0-',
-            'D*0': 'D*_00',
-            'Ds+': 'D_s+',
-            'Ds-': 'D_s-',
-            'Ds*+': 'D*_0s+',
-            'Ds*-': 'D*_0s-',
-            'SigmaC++': 'Sigma_c++',
-            'SigmaC+': 'Sigma_c+',
-            'SigmaC0': 'Sigma_c0',
-            'SigmaC*++': 'Sigma*_c++',
-            'SigmaC*+': 'Sigma*_c+',
-            'SigmaC*0': 'Sigma*_c0',
-            'SigmaC--': 'Sigma_c--',
-            'SigmaC-': 'Sigma_c-'
-        }
-        # Remove if no further bugs 'SigmaC--':'Sigma_cbar--', 'SigmaC-':'Sigma_cbar-',
-
-    def _load_xml(self, file_path, use_cache):
-=======
     def __init__(self, cache_file=__particle_data__, use_cache=True):
         import cPickle as pickle
         if use_cache:
@@ -103,9 +56,8 @@ class PYTHIAParticleData(object):
          'SigmaC--':'Sigma_cbar--', 'SigmaC-':'Sigma_cbar-',
          'SigmaC*++':'Sigma*_c++', 'SigmaC*+':'Sigma*_c+', 'SigmaC*0':'Sigma*_c0',
          'SigmaC--':'Sigma_c--', 'SigmaC-':'Sigma_c-'}
-    
+
     def _load_xml(self, cache_file, use_cache):
->>>>>>> 46282add2652df00ab445b3f79672c84c3b9b2ea:particletools/tables.py
         """Reads the xml and pics out particle data only. If no decay length
         is given, it will calculated from the width."""
 
@@ -123,8 +75,8 @@ class PYTHIAParticleData(object):
                 xmlname = p
                 break
         if xmlname is None:
-            raise Exception('ParticleDataTool::_load_xml(): ' +
-                            'XML file not found.')
+            raise Exception(
+                'ParticleDataTool::_load_xml(): ' + 'XML file not found.')
         root = ET.parse(xmlname).getroot()
         self.pytname2data = {}
         self.pdg_id2data = {}
@@ -154,10 +106,12 @@ class PYTHIAParticleData(object):
                 self.pdg_id2data[pdgid] = (m0, ctau, child.attrib['name'],
                                            charge)
                 try:
-                    self.pytname2data[child.attrib['antiName']] = (
-                        m0, ctau, -pdgid, -charge)
-                    self.pdg_id2data[-pdgid] = (
-                        m0, ctau, child.attrib['antiName'], -charge)
+                    self.pytname2data[child.attrib['antiName']] = (m0, ctau,
+                                                                   -pdgid,
+                                                                   -charge)
+                    self.pdg_id2data[-pdgid] = (m0, ctau,
+                                                child.attrib['antiName'],
+                                                -charge)
                 except KeyError:
                     pass
                 #Extract branching ratios and decay channels
@@ -165,36 +119,28 @@ class PYTHIAParticleData(object):
                 self.branchings[-pdgid] = []
                 for channel in child:
                     if channel.attrib['onMode'] == '1':
-                        self.branchings[pdgid].append(
-                            (float(channel.attrib['bRatio']), [
+                        self.branchings[pdgid].append((float(
+                            channel.attrib['bRatio']), [
                                 int(p)
                                 for p in channel.attrib['products'].split(' ')
                                 if p != ''
                             ]))
-                        self.branchings[-pdgid].append(
-                            (float(channel.attrib['bRatio']), [
+                        self.branchings[-pdgid].append((float(
+                            channel.attrib['bRatio']), [
                                 -int(p)
                                 for p in channel.attrib['products'].split(' ')
                                 if p != ''
                             ]))
 
-        self.extend_tables()
+        self._extend_tables()
         if not use_cache:
             return
 
         import cPickle as pickle
-<<<<<<< HEAD:ParticleDataTool.py
         pickle.dump(
-            (self.pytname2data, self.pdg_id2data, self.branchings),
-            open(file_path, 'wb'),
-            protocol=-1)
+            (self.pytname2data, self.pdg_id2data), cache_file, protocol=-1)
 
-=======
-        pickle.dump((self.pytname2data, self.pdg_id2data),
-                    cache_file, protocol=-1)
-                
->>>>>>> 46282add2652df00ab445b3f79672c84c3b9b2ea:particletools/tables.py
-    def extend_tables(self):
+    def _extend_tables(self):
         """Inserts aliases for MCEq.
         """
         # 70XX prompt leptons
@@ -276,7 +222,7 @@ class PYTHIAParticleData(object):
                 pdg_id = self.str_alias_table[pdg_id]
             return float(self.pytname2data[pdg_id][1])
 
-    def force_stable(self, pdg_id):
+    def _force_stable(self, pdg_id):
         """Edits the :math:`ctau` value
 
         Args:
@@ -383,23 +329,23 @@ class InteractionModelParticleTable():
         assert(len(self.mod_ids) == len(set(self.mod_ids))), \
             "InteractionModelParticleTable error 1."
 
-        assert (len(self.pdg_ids) == len(set(self.pdg_ids)) ==
-                len(self.mod_ids)), "InteractionModelParticleTable error 2."
+        assert (len(self.pdg_ids) == len(set(self.pdg_ids)) == len(
+            self.mod_ids)), "InteractionModelParticleTable error 2."
 
-        assert (
-            len(self.modname2pdg.keys()) == len(set(self.modname2pdg.keys()))
-            == len(self.mod_ids)), "InteractionModelParticleTable error 3."
+        assert (len(self.modname2pdg.keys()) == len(
+            set(self.modname2pdg.keys())) == len(
+                self.mod_ids)), "InteractionModelParticleTable error 3."
 
         # Add index extensions/aliases for leptons
-        self.extend_tables()
+        self._extend_tables()
 
         self.mesons = [
-            m for m in self.get_list_of_mesons(use_pdg=True)
+            m for m in self.list_mesons(use_pdg=True)
             if not (10 < abs(m) < 15 or abs(m) == 16 or m in self.leptons)
         ]
-        self.baryons = self.get_list_of_baryons(use_pdg=True)
+        self.baryons = self.list_baryons(use_pdg=True)
 
-    def extend_tables(self):
+    def _extend_tables(self):
         """Extends the tables with additional aliases for
         the MCEq program.
 
@@ -407,17 +353,14 @@ class InteractionModelParticleTable():
         for subsequent calls. Additional categories have to be
         added here first, prior modifying MCEq.
         """
-        leptons = [#('e-', 11),
-            ('nue', 12),
-            ('mu-', 13),
-            ('numu', 14),
-            ('nutau', 16)]
+        leptons = [  #('e-', 11),
+            ('nue', 12), ('mu-', 13), ('numu', 14), ('nutau', 16)
+        ]
 
-        antileptons = [#('e+', -11),
-            ('antinue', -12),
-            ('mu+', -13),
-            ('antinumu', -14),
-            ('antinutau', -16)]
+        antileptons = [  #('e+', -11),
+            ('antinue', -12), ('mu+', -13), ('antinumu', -14), ('antinutau',
+                                                                -16)
+        ]
 
         aliases = [
             ('', 0),  # standard
@@ -447,7 +390,7 @@ class InteractionModelParticleTable():
 
         self.leptons = al_idxs + antial_idxs + [11, -11] + [22]
 
-    def get_list_of_mesons(self, use_pdg=False):
+    def list_mesons(self, use_pdg=False):
         """Returns list of meson names or PDG IDs.
 
         Args:
@@ -461,7 +404,7 @@ class InteractionModelParticleTable():
         else:
             return [self.modid2pdg[pid] for pid in self.meson_range]
 
-    def get_list_of_baryons(self, use_pdg=False):
+    def list_baryons(self, use_pdg=False):
         """Returns list of baryon names or PDG IDs.
 
         Args:
@@ -586,6 +529,7 @@ class SibyllParticleTable(InteractionModelParticleTable):
 
         InteractionModelParticleTable.__init__(self)
 
+
 class UrQMDParticleTable(InteractionModelParticleTable):
     """This derived class provides conversions from UrQMD particle
     IDs+isospins/names to PDG IDs and vice versa.
@@ -672,8 +616,8 @@ class UrQMDParticleTable(InteractionModelParticleTable):
                 else:
                     temp_dict[name + '-bar'] = ((-modid[0], modid[1]), -pdgid)
                 self.baryon_range.append(modid)
-                self.baryon_range.append(-modid if type(modid) == int
-                                        else (-modid[0], modid[1]))
+                self.baryon_range.append(-modid if type(modid) == int else (
+                    -modid[0], modid[1]))
             # if abs(modid) > 58:
             #     temp_dict['QCD_']
         self.baryon_range.sort()
@@ -690,6 +634,7 @@ class UrQMDParticleTable(InteractionModelParticleTable):
         self.meson_range.sort()
 
         InteractionModelParticleTable.__init__(self)
+
 
 class QGSJetParticleTable(InteractionModelParticleTable):
     """This derived class provides conversions from QGSJET particle
@@ -786,8 +731,8 @@ def print_stable(life_time_greater_then=1e-10):
     for pname in pyth_data.pytname2data.iterkeys():
         if pyth_data.ctau(pname) >= life_time_greater_then * 2.99e10 and \
             pyth_data.pdg_id(pname) > 0:  # and pyth_data.ctau(pname) < 1e10:
-            print templ.format(pname,
-                               pyth_data.ctau(pname), pyth_data.pdg_id(pname))
+            print templ.format(pname, pyth_data.ctau(pname),
+                               pyth_data.pdg_id(pname))
 
 
 def print_decay_channels(pdgid, pyth_data=None):
@@ -829,7 +774,7 @@ def test():
     """Test driver to show how to use the classes of this module."""
     pyth_data = PYTHIAParticleData()
 
-    # List all available particles except intermediate types using the dictionary
+    print "List all available particles except intermediate species"
     for pname, pvalues in pyth_data.pytname2data.iteritems():
         if pname.find('~') == -1:
             print('{name:18s}: m0[GeV] = {m0:10.3e}, ctau[cm] = {ctau:10.3e},'
@@ -846,7 +791,8 @@ def test():
           'longer than that of D0 ({0}cm).').format(pyth_data.ctau('D0'))
     print_stable(pyth_data.ctau('D0') / 2.99e10)
 
-    print make_stable_list(1e-8)
+    print 'Example of a list of stable particles with tau < 1e-8s:', make_stable_list(
+        1e-8)
 
     print "Example of index translation between model indices."
     # Translate SIBYLL particle codes to PYTHIA/PDG conventions
@@ -856,7 +802,8 @@ def test():
         pdg_id = sibtab.modid2pdg[sib_id]
         print line.format(sib_id, sibtab.modid2modname[sib_id], pdg_id,
                           pyth_data.pdg_id2data[pdg_id][2])
-        print print_decay_channels(pdg_id, pyth_data)
+    print 'List decay channels and branching ratios of Ds+'
+    print_decay_channels(431, pyth_data)
 
 
 if __name__ == '__main__':
