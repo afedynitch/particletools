@@ -1,39 +1,44 @@
-Particle Data Tool
-==================
+particletools package
+=====================
 
 This single Python module around an XML data file provides some convinient functions for people
-working with (physical) particles, like protons, neutrons or :math:`\bar{\Sigma}^*_c`
+working with properties of physical particles (protons, pions, D-mesons, etc.)
 
 Status
-------
+======
 
-This version is quite stable. As always, a few bugs can't be excluded.
+This version is stable.
 
-`Documentation <http://particledatatool.readthedocs.org/en/latest/index.html>`_
--------------------------------------------------------------------------------
+Documentation
+=============
 
 The latest version of the documentation can be found `here <http://particledatatool.readthedocs.org/en/latest/index.html>`_.
 
-System requirements
--------------------
+Requirements
+============
 
-Any system running Python and Numpy.
-
-Software requirements
----------------------
-
-Dependencies:
-
-* python-2.7
-* numpy
-
+* python-2.7 or python-3.6
 
 Installation
-------------
+============
+::
 
-Download and run the module to see some examples.
+    pip install particletools
 
-License
--------
+How to use
+==========
+Run::
 
-Code and documentation copyright 2014-2015 Anatoli Fedynitch. Code released under `the MIT license <https://github.com/afedynitch/ParticleDataTool/blob/master/LICENSE>`_.
+        from particletools.tables import *
+        test()
+
+See the module source code how to interact with the functions and read the docs.
+
+Contributors
+============
+* Hans Dembinski (github:HDembinski)
+* Sonia El Hadri (github:soso128)
+
+MIT License
+===========
+Code and documentation copyright 2014 Anatoli Fedynitch

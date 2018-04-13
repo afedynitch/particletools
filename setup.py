@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup
 
-__version__ = "1.0.0b1"
+__version__ = "1.0.0b4"
 
 long_description = ''.join(open('README.rst').readlines()[4:])
 
@@ -13,7 +13,7 @@ setup(
     description='Translating particle codes from CR models from/to PDG codes',
     long_description=long_description,
     license="MIT",
-    url='https://gitlab.com/afedynitch/ParticleDataTool',
+    url='https://github.com/afedynitch/ParticleDataTool',
     package_dir={'particletools': 'particletools'},
     packages=['particletools'],
     install_requires=['setuptools'],

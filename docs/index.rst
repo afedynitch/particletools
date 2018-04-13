@@ -1,10 +1,10 @@
-.. ParticleDataTool documentation master file, created by
+.. particletools documentation master file, created by
    sphinx-quickstart on Fri Nov 28 12:04:38 2014.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Documentation for the :mod:`ParticleDataTool`
-=============================================
+:mod:`particletools` documentation 
+==================================
 
 .. toctree::
    :maxdepth: 2
@@ -12,7 +12,7 @@ Documentation for the :mod:`ParticleDataTool`
 ````````````
 Introduction
 ````````````
-The module :mod:`ParticleDataTool` was developed as a convinience
+The module :mod:`particletools` was developed as a convinience
 library for translating particle codes from one high energy hadronic
 interaction model into the more general naming convention of the
 Particle Data Group `PDG <http://pdg.lbl.gov>`_. Soon it became clear,
@@ -29,7 +29,7 @@ from the PDG.
 ```````
 Caching
 ```````
-When an instance of the :class:`ParticleDataTool.PYTHIAParticleData` 
+When an instance of the :class:`particletools.PYTHIAParticleData` 
 is created, the result from parsing the XML and creating the tables 
 is saved to a file in the working directory. Subsequent instatiations 
 of this class will always load the tables from this file. To force 
@@ -39,7 +39,7 @@ parsing the XML file again just delete the file "ParticleData.ppl".
 Module documentation
 ````````````````````
 
-.. automodule:: ParticleDataTool
+.. automodule:: particletools
    :members:
 
 
