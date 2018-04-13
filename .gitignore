@@ -1,3 +1,6 @@
+build/
+dist/
+particletools.egg-info/
 *.ppl
 *.project
 *.pydev*
