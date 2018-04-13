@@ -22,10 +22,16 @@ Example:
 '''
 
 from abc import ABCMeta
+<<<<<<< HEAD:ParticleDataTool.py
 import os
 
 pdata_basedir = os.path.dirname(os.path.abspath(__file__))
 
+=======
+from tempfile import TemporaryFile
+
+__particle_data__ = TemporaryFile()
+>>>>>>> 46282add2652df00ab445b3f79672c84c3b9b2ea:particletools/tables.py
 
 #===============================================================================
 # PYTHIAParticleData
@@ -36,6 +42,7 @@ class PYTHIAParticleData(object):
     It operates on in memory data after parsing the XML file or after reading
     a pickled PYTHON representation of this parsed XML.
     """
+<<<<<<< HEAD:ParticleDataTool.py
 
     def __init__(self, file_path='ParticleData.ppl', use_cache=True):
         import cPickle as pickle
@@ -76,6 +83,29 @@ class PYTHIAParticleData(object):
         # Remove if no further bugs 'SigmaC--':'Sigma_cbar--', 'SigmaC-':'Sigma_cbar-',
 
     def _load_xml(self, file_path, use_cache):
+=======
+    def __init__(self, cache_file=__particle_data__, use_cache=True):
+        import cPickle as pickle
+        if use_cache:
+            try:
+                self.pytname2data, self.pdg_id2data = pickle.load(cache_file)
+            except:
+                pass
+        self._load_xml(cache_file, use_cache)
+
+        # : name aliases for backward compatibility
+        self.str_alias_table = \
+        {'K0L':'K_L0', 'K0S':'K_S0', 'Lambda':'Lambda0',
+         'eta*':"eta'", 'etaC':'eta_c',
+         'D*+':'D*_0+', 'D*-':'D*_0-', 'D*0':'D*_00',
+         'Ds+':'D_s+', 'Ds-':'D_s-', 'Ds*+':'D*_0s+', 'Ds*-':'D*_0s-',
+         'SigmaC++':'Sigma_c++', 'SigmaC+':'Sigma_c+', 'SigmaC0':'Sigma_c0',
+         'SigmaC--':'Sigma_cbar--', 'SigmaC-':'Sigma_cbar-',
+         'SigmaC*++':'Sigma*_c++', 'SigmaC*+':'Sigma*_c+', 'SigmaC*0':'Sigma*_c0',
+         'SigmaC--':'Sigma_c--', 'SigmaC-':'Sigma_c-'}
+    
+    def _load_xml(self, cache_file, use_cache):
+>>>>>>> 46282add2652df00ab445b3f79672c84c3b9b2ea:particletools/tables.py
         """Reads the xml and pics out particle data only. If no decay length
         is given, it will calculated from the width."""
 
@@ -153,11 +183,17 @@ class PYTHIAParticleData(object):
             return
 
         import cPickle as pickle
+<<<<<<< HEAD:ParticleDataTool.py
         pickle.dump(
             (self.pytname2data, self.pdg_id2data, self.branchings),
             open(file_path, 'wb'),
             protocol=-1)
 
+=======
+        pickle.dump((self.pytname2data, self.pdg_id2data),
+                    cache_file, protocol=-1)
+                
+>>>>>>> 46282add2652df00ab445b3f79672c84c3b9b2ea:particletools/tables.py
     def extend_tables(self):
         """Inserts aliases for MCEq.
         """
