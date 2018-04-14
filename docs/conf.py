@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.abspath('../particletools'))
 sys.path.insert(0, os.path.abspath('..'))
 
 from setup import __version__
-print __version__
+
 __sphinx_release__ = __version__
 __sphinx_version__ = __version__[:6]
 

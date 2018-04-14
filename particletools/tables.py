@@ -17,7 +17,7 @@ Example:
 
       $ from particletools.tables import *
       $ test()
-      
+
 |
 
 '''
