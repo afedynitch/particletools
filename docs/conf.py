@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# ParticleDataTool documentation build configuration file, created by
+# particletools documentation build configuration file, created by
 # sphinx-quickstart on Fri Nov 28 12:04:38 2014.
 #
 # This file is execfile()d with the current directory set to its
@@ -49,7 +49,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'ParticleDataTool'
+project = u'particletools'
 copyright = u'2014, Anatoli Fedynitch'
 
 autodoc_member_order = 'groupwise'
@@ -184,7 +184,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'ParticleDataTooldoc'
+htmlhelp_basename = 'particletoolsdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -204,7 +204,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'ParticleDataTool.tex', u'ParticleDataTool Documentation',
+  ('index', 'particletools.tex', u'particletools Documentation',
    u'Anatoli Fedynitch', 'manual'),
 ]
 
@@ -234,7 +234,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'particledatatool', u'ParticleDataTool Documentation',
+    ('index', 'particletools', u'particletools Documentation',
      [u'Anatoli Fedynitch'], 1)
 ]
 
@@ -248,8 +248,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'ParticleDataTool', u'ParticleDataTool Documentation',
-   u'Anatoli Fedynitch', 'ParticleDataTool', 'One line description of project.',
+  ('index', 'particletools', u'particletools Documentation',
+   u'Anatoli Fedynitch', 'particletools', 'One line description of project.',
    'Miscellaneous'),
 ]
 

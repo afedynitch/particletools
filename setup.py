@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup
 
-__version__ = "1.0.0b4"
+__version__ = "1.0.0b6"
 
 long_description = ''.join(open('README.rst').readlines()[4:])
 
@@ -18,9 +18,7 @@ setup(
     packages=['particletools'],
     install_requires=['setuptools'],
     py_modules=["six"],
-    package_data={'particletools': ['ParticleData.xml'],
-},
-    data_files=[('particletools', ['particletools/ParticleData.xml'])],
+    package_data={'particletools': ['ParticleData.xml']},
     classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
