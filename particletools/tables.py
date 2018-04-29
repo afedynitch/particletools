@@ -763,12 +763,14 @@ def print_decay_channels(pdgid, pyth_data=None):
         print("\t {0}%, {1}".format(br * 100., prod_list))
 
 
-def make_stable_list(life_time_greater_then):
+def make_stable_list(life_time_greater_then, pdata_obj=None):
     """Returns a list of particles PDG IDs with a lifetime longer than
     specified argument value in s. Stable particles, such as photons,
     neutrinos, nucleons and electrons are not included."""
 
-    pyth_data = PYTHIAParticleData()
+    if pdata_obj is None:
+        pdata_obj = PYTHIAParticleData()
+    
     particle_list = []
 
     for pname in six.iterkeys(pyth_data.pytname2data):

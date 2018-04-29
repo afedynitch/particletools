@@ -5,3 +5,4 @@ particletools.egg-info/
 *.project
 *.pydev*
 *.pyc
+.vscode
