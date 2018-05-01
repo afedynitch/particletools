@@ -773,10 +773,10 @@ def make_stable_list(life_time_greater_then, pdata_obj=None):
     
     particle_list = []
 
-    for pname in six.iterkeys(pyth_data.pytname2data):
-        if pyth_data.ctau(pname) >= life_time_greater_then * 2.99e10 and \
-          pyth_data.ctau(pname) < 1e30:
-            particle_list.append(pyth_data.pdg_id(pname))
+    for pname in six.iterkeys(pdata_obj.pytname2data):
+        if pdata_obj.ctau(pname) >= life_time_greater_then * 2.99e10 and \
+          pdata_obj.ctau(pname) < 1e30:
+            particle_list.append(pdata_obj.pdg_id(pname))
 
     return particle_list
 
