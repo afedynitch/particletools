@@ -78,8 +78,27 @@ def test_print_stable():
     buf = StringIO()
     tables.print_stable(1e-10, file=buf)
     buf.seek(0)
-    print(buf.read())
-    # assert(buf.read() == """)
+    assert buf.read() == """
+Known particles which lifetimes longer than 1e-10 s:
+Name                  ctau [cm]   PDG ID
+Sigma-                     4.43     3112
+Sigmabar+                  4.43    -3112
+Xi-                        4.91     3312
+Xibar+                     4.91    -3312
+Xi0                        8.71     3322
+Xibar0                     8.71    -3322
+Lambda0                    7.89     3122
+Lambdabar0                 7.89    -3122
+K+                          371      321
+K-                          371     -321
+pi+                         780      211
+pi-                         780     -211
+K_L0                   1.53e+03      130
+mu-                    6.59e+04       13
+mu+                    6.59e+04      -13
+n0                     2.66e+13     2112
+nbar0                  2.66e+13    -2112
+"""
 
 
 def test_print_decay_channels():
