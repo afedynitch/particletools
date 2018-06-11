@@ -26,10 +26,53 @@ from __future__ import print_function
 
 from abc import ABCMeta
 from tempfile import TemporaryFile
-
+from collections import namedtuple
 import six
+from six.moves import cPickle as pickle
 
 __particle_data__ = TemporaryFile()
+
+
+class ParticleData(namedtuple("ParticleData", "name mass ctau charge")):
+    __slots__ = () # no dict for this data type; saves memory, faster access
+
+
+class ParticleDataDict(object):
+    """Dict-like class to store ParticleData and provide extended lookup"""
+    __slots__ = "_name2id", "_data"
+
+    def __init__(self):
+        self._name2id = {}
+        self._data = {}
+
+    def __setitem__(self, pdg_id, particle_data):
+        # same names are sometimes repeatedly assigned,
+        # use first occurence for name2id mapping
+        if particle_data.name not in self._name2id:
+            self._name2id[particle_data.name] = pdg_id
+        self._data[pdg_id] = particle_data
+
+    def __getitem__(self, pdg_id_or_name):
+        # accept pdg_id or particle name
+        if isinstance(pdg_id_or_name, six.integer_types):
+            return self._data[pdg_id_or_name]
+        else:
+            i = self._name2id[pdg_id_or_name]
+            return self._data[i]
+
+    def id2name(self, pdg_id):
+        return self._data[pdg_id].name
+
+    def name2id(self, name):
+        return self._name2id[name]
+
+    def insert_aliases(self, d):
+        # enable name aliases for backward compatibility
+        for alias, name in six.iteritems(d):
+            if name in self._name2id:
+                # alias may not override existing record
+                assert alias not in self._name2id
+                self._name2id[alias] = self._name2id[name]
 
 
 #===============================================================================
@@ -46,121 +89,109 @@ class PYTHIAParticleData(object):
         use_cache (bool): enable cache, or parse XML file every time
     """
 
+
+
     def __init__(self, cache_file=__particle_data__, use_cache=True):
-        import pickle
         if use_cache:
             try:
-                self.pytname2data, self.pdg_id2data = pickle.load(cache_file)
-            except:
-                pass
-        self._load_xml(cache_file, use_cache)
+                self.particle_data, self.branchings = pickle.load(cache_file)
+            except IOError:
+                self._load_xml(cache_file)
+                pickle.dump((self.particle_data, self.branchings),
+                            cache_file, protocol=-1)
+        else:
+            self._load_xml(cache_file)
 
-        # : name aliases for backward compatibility
-        self.str_alias_table = \
-        {'K0L':'K_L0', 'K0S':'K_S0', 'Lambda':'Lambda0',
-         'eta*':"eta'", 'etaC':'eta_c',
-         'D*+':'D*_0+', 'D*-':'D*_0-', 'D*0':'D*_00',
-         'Ds+':'D_s+', 'Ds-':'D_s-', 'Ds*+':'D*_0s+', 'Ds*-':'D*_0s-',
-         'SigmaC++':'Sigma_c++', 'SigmaC+':'Sigma_c+', 'SigmaC0':'Sigma_c0',
-         'SigmaC--':'Sigma_cbar--', 'SigmaC-':'Sigma_cbar-',
-         'SigmaC*++':'Sigma*_c++', 'SigmaC*+':'Sigma*_c+', 'SigmaC*0':'Sigma*_c0',
-         'SigmaC--':'Sigma_c--', 'SigmaC-':'Sigma_c-'}
 
-    def _load_xml(self, cache_file, use_cache):
+    def _load_xml(self, cache_file):
         """Reads the xml and pics out particle data only. If no decay length
         is given, it will calculated from the width."""
 
         import xml.etree.ElementTree as ET
         import os
 
-        xmlname = None
         base = os.path.dirname(os.path.abspath(__file__))
-        searchpaths = [
-            base + '/ParticleData.xml', 'ParticleData.xml',
-            '../ParticleData.xml', 'ParticleDataTool/ParticleData.xml'
-        ]
+        searchpaths = (base + '/ParticleData.xml', 'ParticleData.xml',
+                       '../ParticleData.xml',
+                       'ParticleDataTool/ParticleData.xml')
+        xmlname = None
         for p in searchpaths:
             if os.path.isfile(p):
                 xmlname = p
                 break
         if xmlname is None:
-            raise Exception(
-                'ParticleDataTool::_load_xml(): ' + 'XML file not found.')
+            raise IOError('ParticleDataTool::_load_xml(): '
+                          'XML file not found.')
         root = ET.parse(xmlname).getroot()
-        self.pytname2data = {}
-        self.pdg_id2data = {}
+        PData = ParticleData
+        self.particle_data = ParticleDataDict()
         self.branchings = {}
         GeVfm = 0.19732696312541853
         for child in root:
             if child.tag == 'particle':
-                m0 = float(child.attrib['m0'])
-                charge = int(child.attrib['chargeType']) / 3
-                ctau = 0.
-                if 'tau0' in child.attrib:
-                    ctau = 0.1 * float(child.attrib['tau0'])
-                elif 'mWidth' in child.attrib:
-                    mWidth = float(child.attrib['mWidth'])
+                attr = child.attrib # faster repeated access
+                pdg_id = int(attr['id'])
+                mass = float(attr['m0'])
+                # raw charge is in units of 1/3 e
+                charge = float(attr['chargeType']) / 3.0
+
+                if 'tau0' in attr:
+                    ctau = 0.1 * float(attr['tau0'])
+                elif 'mWidth' in attr:
+                    mWidth = float(attr['mWidth'])
                     ctau = GeVfm / (mWidth) * 1e-15 * 100.0  # in cm
-                elif child.attrib['id'] in ['4314', '4324', '311', '433']:
+                elif pdg_id in (4314, 4324, 311, 433):
                     ctau = 0.0
-                elif child.attrib['id'] in [
-                        "2212", "22", "11", "12", "14", "16"
-                ]:
+                elif pdg_id in (2212, 22, 11, 12, 14, 16):
                     ctau = float('Inf')
                 else:
-                    continue
-                pdgid = int(child.attrib['id'])
-                self.pytname2data[child.attrib['name']] = (m0, ctau, pdgid,
-                                                           charge)
-                self.pdg_id2data[pdgid] = (m0, ctau, child.attrib['name'],
-                                           charge)
-                try:
-                    self.pytname2data[child.attrib['antiName']] = (m0, ctau,
-                                                                   -pdgid,
-                                                                   -charge)
-                    self.pdg_id2data[-pdgid] = (m0, ctau,
-                                                child.attrib['antiName'],
-                                                -charge)
-                except KeyError:
-                    pass
+                    ctau = float("NaN")
+
+                self.particle_data[pdg_id] = PData(attr['name'], mass, ctau,
+                                                  charge)
+                if 'antiName' in attr:
+                    self.particle_data[-pdg_id] = PData(attr['antiName'], mass,
+                                                       ctau, -charge)
                 #Extract branching ratios and decay channels
-                self.branchings[pdgid] = []
-                self.branchings[-pdgid] = []
+                self.branchings[pdg_id] = []
+                self.branchings[-pdg_id] = []
                 for channel in child:
                     if channel.attrib['onMode'] == '1':
-                        self.branchings[pdgid].append((float(
+                        self.branchings[pdg_id].append((float(
                             channel.attrib['bRatio']), [
                                 int(p)
                                 for p in channel.attrib['products'].split(' ')
                                 if p != ''
                             ]))
-                        self.branchings[-pdgid].append((float(
+                        self.branchings[-pdg_id].append((float(
                             channel.attrib['bRatio']), [
                                 -int(p)
                                 for p in channel.attrib['products'].split(' ')
                                 if p != ''
                             ]))
 
-        self._extend_tables()
-        if not use_cache:
-            return
-
-        import pickle
-        pickle.dump(
-            (self.pytname2data, self.pdg_id2data), cache_file, protocol=-1)
-
-    def _extend_tables(self):
-        """Inserts aliases for MCEq.
-        """
+        # Inserts aliases for MCEq.
         # 70XX prompt leptons
         # 71XX leptons from pion decay
         # 72XX leptons from kaon decay
         # 73XX multi-purpose category
         for a_id in [7000, 7100, 7200, 7300]:
             for l_id in [11, 12, 13, 14, 16]:
+                self.particle_data[a_id + l_id] = self.particle_data[l_id]
+                self.particle_data[-(a_id + l_id)] = self.particle_data[-l_id]
 
-                self.pdg_id2data[a_id + l_id] = self.pdg_id2data[l_id]
-                self.pdg_id2data[-(a_id + l_id)] = self.pdg_id2data[-l_id]
+        # insert aliases for backward compatibility
+        self.particle_data.insert_aliases(
+            {'K0L':'K_L0', 'K0S':'K_S0', 'Lambda':'Lambda0',
+             'eta*':"eta'", 'etaC':'eta_c',
+             # 'D*+':'D*_0+', 'D*-':'D*_0-',
+             # 'D*0':'D*_00',
+             'Ds+':'D_s+', 'Ds-':'D_s-', 'Ds*+':'D*_0s+', 'Ds*-':'D*_0s-',
+             'SigmaC++':'Sigma_c++', 'SigmaC+':'Sigma_c+',
+             'SigmaC0':'Sigma_c0', 'SigmaC--':'Sigma_cbar--',
+             'SigmaC-':'Sigma_cbar-', 'SigmaC*++':'Sigma*_c++',
+             'SigmaC*+':'Sigma*_c+','SigmaC*0':'Sigma*_c0',
+             'SigmaC--':'Sigma_c--', 'SigmaC-':'Sigma_c-'})
 
     def pdg_id(self, str_id):
         """Returns PDG particle ID.
@@ -171,12 +202,20 @@ class PYTHIAParticleData(object):
         Returns:
           (int): PDG ID
         """
-        if str_id in self.str_alias_table:
-            str_id = self.str_alias_table[str_id]
+        return self.particle_data.name2id(str_id)
 
-        return int(self.pytname2data[str_id][2])
+    def name(self, pdg_id):
+        """Returns PYTHIA particle name.
 
-    def decay_channels(self, pdg_id):
+        Args:
+          pdg_id (int): particle PDG ID
+
+        Returns:
+          (str): particle name string
+        """
+        return self.particle_data.id2name(pdg_id)
+
+    def decay_channels(self, pdg_id_or_name):
         """Returns decay channels as list of tuples.
 
         Warning, this function reflects only the status in PYTHIA and
@@ -188,97 +227,65 @@ class PYTHIAParticleData(object):
         Returns:
           (list): (BR-ratio,[prod1, prod2, ...])
         """
+        if isinstance(pdg_id_or_name, six.integer_types):
+            return self.branchings[pdg_id_or_name]
+        else:
+            i = self.particle_data.name2id(pdg_id_or_name)
+            return self.branchings[i]
 
-        try:
-            return self.branchings[pdg_id]
-        except KeyError:
-            if pdg_id in self.str_alias_table:
-                pdg_id = self.str_alias_table[pdg_id]
-            return self.branchings[pdg_id]
-
-    def mass(self, pdg_id):
+    def mass(self, pdg_id_or_name):
         """Returns particle mass in GeV. The mass is calculated from
         the width if not given in the XML table.
 
         Args:
-          pdg_id (int): particle PDG ID
+          pdg_id_or_name: particle PDG ID or string ID
 
         Returns:
           (float): mass in GeV
         """
+        return self.particle_data[pdg_id_or_name].mass
 
-        try:
-            return float(self.pdg_id2data[pdg_id][0])
-        except KeyError:
-            if pdg_id in self.str_alias_table:
-                pdg_id = self.str_alias_table[pdg_id]
-            return float(self.pytname2data[pdg_id][0])
-
-    def ctau(self, pdg_id):
+    def ctau(self, pdg_id_or_name):
         """Returns decay length in cm.
 
         Args:
-          pdg_id (int): particle PDG ID
+          pdg_id_or_name: particle PDG ID or string ID
 
         Returns:
           (float): decay length :math:`ctau` in cm
         """
+        return self.particle_data[pdg_id_or_name].ctau
 
-        try:
-            return float(self.pdg_id2data[pdg_id][1])
-        except KeyError:
-            if pdg_id in self.str_alias_table:
-                pdg_id = self.str_alias_table[pdg_id]
-            return float(self.pytname2data[pdg_id][1])
-
-    def _force_stable(self, pdg_id):
-        """Edits the :math:`ctau` value
-
-        Args:
-          pdg_id (int): particle PDG ID
-        """
-        import math
-
-        self.pdg_id2data[pdg_id] = (self.pdg_id2data[pdg_id][0], float('Inf'))
-        if abs(pdg_id) in [11, 12, 13, 14, 16]:
-            for a_id in [7000, 7100, 7200, 7300]:
-                self.pdg_id2data[math.copysign(a_id,pdg_id) + pdg_id] = \
-                    self.pdg_id2data[pdg_id]
-
-    def name(self, pdg_id):
-        """Returns PYTHIA particle name.
-
-        Args:
-          pdg_id (int): particle PDG ID
-
-        Returns:
-          (str): particle name string
-        """
-
-        try:
-            return self.pdg_id2data[pdg_id][2]
-        except KeyError:
-            if pdg_id in self.str_alias_table:
-                pdg_id = self.str_alias_table[pdg_id]
-            return self.pytname2data[pdg_id][2]
-
-    def charge(self, pdg_id):
+    def charge(self, pdg_id_or_name):
         """Returns charge.
 
         Args:
-          pdg_id (int): particle PDG ID
+          pdg_id_or_name: particle PDG ID or string ID
 
         Returns:
           (float): charge
         """
+        return self.particle_data[pdg_id_or_name].charge
 
-        try:
-            return float(self.pdg_id2data[pdg_id][3])
-        except ValueError:
-            print("Exception:", pdg_id)
-            if pdg_id in self.str_alias_table:
-                pdg_id = self.str_alias_table[pdg_id]
-            return float(self.pytname2data[pdg_id][3])
+    def _force_stable(self, pdg_id_or_name):
+        """Edits the :math:`ctau` value
+
+        Args:
+          pdg_id_or_name: particle PDG ID or string ID
+        """
+        import math
+
+        d = self.particle_data[pdg_id_or_name]
+        pdg_id = pdg_id_or_name \
+            if isinstance(pdg_id_or_name, six.integer_types) else \
+            self.particle_data.name2id(pdg_id_or_name)
+
+        self.particle_data[pdg_id] = ParticleData(d.name, d.mass,
+                                                  float('Inf'), d.charge)
+        if abs(pdg_id) in (11, 12, 13, 14, 16):
+            for a_id in (7000, 7100, 7200, 7300):
+                self.particle_data[math.copysign(a_id, pdg_id) + pdg_id] = \
+                    self.particle_data[pdg_id]
 
 
 class InteractionModelParticleTable():
