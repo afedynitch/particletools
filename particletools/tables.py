@@ -755,16 +755,23 @@ def print_stable(life_time_greater_then=1e-10, pdata=None, **kwargs):
     print('{0:20} {1:>10} {2:>8}'.format('Name', 'ctau [cm]', 'PDG ID'),
           **kwargs)
     templ = '{0:20} {1:10.3g} {2:8}'
-    seen = set()
-    rows = []
+    rows = {}
     for pid in make_stable_list(life_time_greater_then, pdata):
         pd = pdata[pid]
-        if pd.name in seen:
-            continue
-        seen.add(pd.name)
-        rows.append((pd.name, pd.ctau, pid))
-    rows.sort(lambda a, b: int(a[1] - b[1]))
-    for row in rows:
+        if pd.name in rows:
+            pid2 = rows[pd.name][2]
+            if abs(pid2) < abs(pid):
+                continue
+        rows[pd.name] = (pd.name, pd.ctau, pid)
+    v = rows.values()
+    def cmp(a, b):
+        if a[1] == b[1]:
+            if len(a[0]) == len(b[0]):
+                return b[2] - a[2]
+            return len(a[0]) - len(b[0])
+        return int(a[1] - b[1])
+    v.sort(cmp)
+    for row in v:
         print(templ.format(*row), **kwargs)
 
 
