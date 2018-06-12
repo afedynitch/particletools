@@ -29,6 +29,8 @@ from tempfile import TemporaryFile
 from collections import namedtuple
 import six
 from six.moves import cPickle as pickle
+# speed of light in local units
+c_speed_of_light = 2.99e10
 
 __particle_data__ = TemporaryFile()
 
@@ -137,9 +139,10 @@ class PYTHIAParticleData(object):
                 elif 'mWidth' in attr:
                     mWidth = float(attr['mWidth'])
                     ctau = GeVfm / (mWidth) * 1e-15 * 100.0  # in cm
+                # what is this about? (HD)
                 elif pdg_id in (4314, 4324, 311, 433):
                     ctau = 0.0
-                elif pdg_id in (2212, 22, 11, 12, 14, 16):
+                elif mass == 0.0 or pdg_id in (11, 12, 14, 16, 22, 2212):
                     ctau = float('Inf')
                 else:
                     ctau = float("NaN")
@@ -744,33 +747,38 @@ class DpmJetParticleTable(SibyllParticleTable):
             self.modid2pdg[mod_id] = mod_id
 
 
-def print_stable(life_time_greater_then=1e-10, pdata=None, **kwargs):
+def print_stable(min_life_time=1e-10, pdata=None, title=None, **kwargs):
     """Prints a list of particles with a lifetime longer than
     specified argument value in s."""
     if pdata is None:
         pdata = PYTHIAParticleData()
 
-    print('\nKnown particles which lifetimes longer than {0:1.0e} s:'
-          .format(life_time_greater_then), **kwargs)
+    if title is None:
+        print('Known particles which lifetimes longer than {0:1.0e} s:'
+              .format(min_life_time), **kwargs)
+    else:
+        print(title, **kwargs)
     print('{0:20} {1:>10} {2:>8}'.format('Name', 'ctau [cm]', 'PDG ID'),
           **kwargs)
     templ = '{0:20} {1:10.3g} {2:8}'
     rows = {}
-    for pid in make_stable_list(life_time_greater_then, pdata):
-        pd = pdata[pid]
+    for pid, pd in make_stable_list(min_life_time, pdata, full_record=True):
         if pd.name in rows:
             pid2 = rows[pd.name][2]
-            if abs(pid2) < abs(pid):
+            if (((pid2 > 0 and pid > 0) or (pid2 < 0 and pid < 0)) and
+                abs(pid2) < abs(pid)):
                 continue
         rows[pd.name] = (pd.name, pd.ctau, pid)
     v = rows.values()
-    def cmp(a, b):
+    def cmp_name(a, b):
+        return -1 if a[0] < b[0] else (1 if a[0] > b[0] else 0)
+    def cmp_ctau(a, b):
         if a[1] == b[1]:
-            if len(a[0]) == len(b[0]):
-                return b[2] - a[2]
-            return len(a[0]) - len(b[0])
-        return int(a[1] - b[1])
-    v.sort(cmp)
+            return cmp_name(a, b)
+        if a[1] < b[1]:
+            return -1
+        return 1
+    v.sort(cmp_ctau)
     for row in v:
         print(templ.format(*row), **kwargs)
 
@@ -781,23 +789,28 @@ def print_decay_channels(pid, pdata=None, **kwargs):
         pdata = PYTHIAParticleData()
 
     dec_list = pdata.decay_channels(pid)
+    pname = pdata.name(pid)
 
-    print("{0} decays into:".format(pdata.name(pid)), **kwargs)
-    for br, prods in sorted(dec_list, reverse=True):
-        prod_list = []
-        for p in prods:
-            try:
-                prod_list.append(pdata.name(p))
-            except KeyError:
-                prod_list.append('*' + str(p))
-        prod_list = ', '.join(prod_list)
-        print("\t {0}%, {1}".format(br * 100., prod_list), **kwargs)
+    if dec_list:
+        print("{0} decays into:".format(pname), **kwargs)
+        for br, prods in sorted(dec_list, reverse=True):
+            prod_list = []
+            for p in prods:
+                try:
+                    prod_list.append(pdata.name(p))
+                except KeyError:
+                    prod_list.append('*' + str(p))
+            prod_list = ', '.join(prod_list)
+            print("\t{0:10}%, {1}".format(br * 100., prod_list), **kwargs)
+    else:
+        print("{0} is stable".format(pname), **kwargs)
 
 
-def make_stable_list(life_time_greater_then, pdata=None):
+def make_stable_list(min_life_time, pdata=None, full_record=False):
     """Returns a list of particles PDG IDs with a lifetime longer than
     specified argument value in s. Stable particles, such as photons,
-    neutrinos, nucleons and electrons are not included."""
+    neutrinos, nucleons and electrons are not included. If full_record
+    is set to true, tuples of PDG IDs and particle data are returned."""
 
     if pdata is None:
         pdata = PYTHIAParticleData()
@@ -806,7 +819,10 @@ def make_stable_list(life_time_greater_then, pdata=None):
 
     for pid, pd in pdata.iteritems():
         ctau = pd.ctau
-        if ctau >= life_time_greater_then * 2.99e10 and ctau < 1e30:
-            particle_list.append(pid)
+        if ctau >= min_life_time * c_speed_of_light and ctau < 1e30:
+            if full_record:
+                particle_list.append((pid, pd))
+            else:
+                particle_list.append(pid)
 
     return particle_list
