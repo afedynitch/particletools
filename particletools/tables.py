@@ -29,8 +29,11 @@ from tempfile import TemporaryFile
 from collections import namedtuple
 import six
 from six.moves import cPickle as pickle
-# speed of light in local units
-c_speed_of_light = 2.99e10
+
+# local units in this module: cm, s, GeV
+
+# speed of light in local units of cm/s
+c_speed_of_light = 2.99792458e10
 
 __particle_data__ = TemporaryFile()
 
