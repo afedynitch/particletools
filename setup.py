@@ -18,6 +18,7 @@ def setup_package():
         package_dir={'particletools': 'particletools'},
         packages=['particletools'],
         install_requires=['setuptools'],
+        tests_require=['pytest'],
         py_modules=["six"],
         package_data={'particletools': ['ParticleData.xml']},
         classifiers=[
