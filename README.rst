@@ -1,6 +1,8 @@
 particletools package
 =====================
 
+|docs|
+
 This single Python module around an XML data file provides some convinient functions for people
 working with properties of physical particles (protons, pions, D-mesons, etc.)
 
@@ -42,3 +44,8 @@ Contributors
 MIT License
 ===========
 Code and documentation copyright 2014 Anatoli Fedynitch
+
+.. |docs| image:: https://readthedocs.org/projects/particledatatool/badge/?version=latest
+    :alt: Documentation Status
+    :scale: 100%
+    :target: https://particledatatool.readthedocs.io/en/latest/?badge=latest
