@@ -37,9 +37,8 @@ c_speed_of_light = 2.99792458e10
 
 __particle_data__ = TemporaryFile()
 
-
 class ParticleData(namedtuple("ParticleData", "name mass ctau charge")):
-    __slots__ = () # no dict for this data type; saves memory, faster access
+    __slots__ = ()  # no dict for this data type; saves memory, faster access
 
 
 class ParticleDataDict(object):
@@ -70,15 +69,6 @@ class ParticleDataDict(object):
     def name2id(self, name):
         return self._name2id[name]
 
-    def insert_aliases(self, d):
-        # enable name aliases for backward compatibility
-        for alias, name in six.iteritems(d):
-            if name in self._name2id:
-                # alias may not override existing record
-                assert alias not in self._name2id
-                self._name2id[alias] = self._name2id[name]
-
-
 #===============================================================================
 # PYTHIAParticleData
 #===============================================================================
@@ -100,10 +90,10 @@ class PYTHIAParticleData(object):
             except (IOError, EOFError):
                 self._load_xml(cache_file)
                 pickle.dump((self._particle_data, self._branchings),
-                            cache_file, protocol=-1)
+                            cache_file,
+                            protocol=-1)
         else:
             self._load_xml(cache_file)
-
 
     def _load_xml(self, cache_file):
         """Reads the xml and pics out particle data only. If no decay length
@@ -131,7 +121,7 @@ class PYTHIAParticleData(object):
         GeVfm = 0.19732696312541853
         for child in root:
             if child.tag == 'particle':
-                attr = child.attrib # faster repeated access
+                attr = child.attrib  # faster repeated access
                 pdg_id = int(attr['id'])
                 mass = float(attr['m0'])
                 # raw charge is in units of 1/3 e
@@ -151,51 +141,28 @@ class PYTHIAParticleData(object):
                     ctau = float("NaN")
 
                 self._particle_data[pdg_id] = PData(attr['name'], mass, ctau,
-                                                  charge)
+                                                    charge)
                 if 'antiName' in attr:
-                    self._particle_data[-pdg_id] = PData(attr['antiName'], mass,
-                                                       ctau, -charge)
+                    self._particle_data[-pdg_id] = PData(
+                        attr['antiName'], mass, ctau, -charge)
                 #Extract branching ratios and decay channels
                 self._branchings[pdg_id] = []
                 self._branchings[-pdg_id] = []
                 for channel in child:
                     if channel.attrib['onMode'] == '1':
-                        self._branchings[pdg_id].append((float(
-                            channel.attrib['bRatio']), [
+                        self._branchings[pdg_id].append(
+                            (float(channel.attrib['bRatio']), [
                                 int(p)
                                 for p in channel.attrib['products'].split(' ')
                                 if p != ''
                             ]))
-                        self._branchings[-pdg_id].append((float(
-                            channel.attrib['bRatio']), [
+                        self._branchings[-pdg_id].append(
+                            (float(channel.attrib['bRatio']), [
                                 -int(p)
                                 for p in channel.attrib['products'].split(' ')
                                 if p != ''
                             ]))
 
-        # Inserts aliases for MCEq.
-        # 70XX prompt leptons
-        # 71XX leptons from pion decay
-        # 72XX leptons from kaon decay
-        # 73XX multi-purpose category
-        for a_id in [7000, 7100, 7200, 7300]:
-            for l_id in [11, 12, 13, 14, 16]:
-                self._particle_data[a_id + l_id] = self._particle_data[l_id]
-                self._particle_data[-(a_id + l_id)] = self._particle_data[-l_id]
-
-        # insert aliases for backward compatibility
-        self._particle_data.insert_aliases(
-            {'K0L':'K_L0', 'K0S':'K_S0', 'Lambda':'Lambda0',
-             'eta*':"eta'", 'etaC':'eta_c',
-             # 'D*+':'D*_0+', 'D*-':'D*_0-',
-             # 'D*0':'D*_00',
-             'Ds+':'D_s+', 'Ds-':'D_s-', 'Ds*+':'D*_0s+', 'Ds*-':'D*_0s-',
-             'SigmaC++':'Sigma_c++', 'SigmaC+':'Sigma_c+',
-             'SigmaC0':'Sigma_c0', 'SigmaC--':'Sigma_cbar--',
-             'SigmaC-':'Sigma_cbar-', 'SigmaC*++':'Sigma*_c++',
-             'SigmaC*+':'Sigma*_c+','SigmaC*0':'Sigma*_c0',
-             'SigmaC--':'Sigma_c--', 'SigmaC-':'Sigma_c-',
-             'neutron': 'n0', 'proton': 'p+'})
 
     def __iter__(self):
         """Returns an iterator over PDG IDs"""
@@ -296,11 +263,7 @@ class PYTHIAParticleData(object):
             self._particle_data.name2id(pid_or_name)
 
         self._particle_data[pdg_id] = ParticleData(d.name, d.mass,
-                                                  float('Inf'), d.charge)
-        if abs(pdg_id) in (11, 12, 13, 14, 16):
-            for a_id in (7000, 7100, 7200, 7300):
-                self._particle_data[math.copysign(a_id, pdg_id) + pdg_id] = \
-                    self._particle_data[pdg_id]
+                                                   float('Inf'), d.charge)
 
 
 class InteractionModelParticleTable():
@@ -314,7 +277,9 @@ class InteractionModelParticleTable():
 
     __metaclass__ = ABCMeta
 
-    def __init__(self):
+    def __init__(self, part_table):
+        # : hand-crafted particle table that maps name, PDG ID and model ID
+        self.part_table = part_table
         # : converts model ID to PDG ID
         self.modid2pdg = {}
         # : converts PDG ID to model ID
@@ -336,11 +301,11 @@ class InteractionModelParticleTable():
         # : stores the list of baryon PDG IDs
         self.baryons = []
 
-        try:
-            part_table = self.part_table
-        except:
-            raise Exception(self.__class__.__name__ +
-                            '(): Error particle table not defined.')
+        # Unify particle names according to PYTHIA data base
+        _pytab = PYTHIAParticleData()
+        for modname in self.part_table:
+            pdgid = self.part_table[modname][1]
+            self.part_table[_pytab.name(pdgid)] = self.part_table.pop(modname)
 
         # Fill mapping dictionaries
         for modname, pids in six.iteritems(part_table):
@@ -369,58 +334,28 @@ class InteractionModelParticleTable():
                 self.mod_ids)), "InteractionModelParticleTable error 3."
 
         # Add index extensions/aliases for leptons
-        self._extend_tables()
+        # self._extend_tables()
+
+        self.leptons = [l for l in self.list_leptons(use_pdg=True)]
 
         self.mesons = [
-            m for m in self.list_mesons(use_pdg=True)
-            if not (10 < abs(m) < 15 or abs(m) == 16 or m in self.leptons)
+            m for m in self.list_mesons(use_pdg=True) if m not in self.leptons
         ]
         self.baryons = self.list_baryons(use_pdg=True)
 
-    def _extend_tables(self):
-        """Extends the tables with additional aliases for
-        the MCEq program.
+    def list_leptons(self, use_pdg=False):
+        """Returns list of lepton names or PDG IDs.
 
-        The method is called in :func:`__init__` nad theres no need
-        for subsequent calls. Additional categories have to be
-        added here first, prior modifying MCEq.
+        Args:
+          use_pdg (bool, optional): If True, PDG IDs are return
+                                    otherwise particle names
+        Returns:
+          list: list of lepton names or PDG IDs
         """
-        leptons = [  #('e-', 11),
-            ('nue', 12), ('mu-', 13), ('numu', 14), ('nutau', 16)
-        ]
-
-        antileptons = [  #('e+', -11),
-            ('antinue', -12), ('mu+', -13), ('antinumu', -14), ('antinutau',
-                                                                -16)
-        ]
-
-        aliases = [
-            ('', 0),  # standard
-            ('pr_', 7000),  # prompt
-            ('pi_', 7100),  # from pion decay
-            ('k_', 7200),  # from kaon decay
-            ('obs_', 7300)
-        ]  # multi-purpose
-
-        al_idxs, antial_idxs = [], []
-
-        for prefix, idxadd in aliases:
-            for lepname, lepidx in leptons:
-                self.pdg2modname[idxadd + lepidx] = prefix + lepname
-                self.modname2pdg[prefix + lepname] = idxadd + lepidx
-                al_idxs.append(idxadd + lepidx)
-            for lepname, lepidx in antileptons:
-                self.pdg2modname[-idxadd + lepidx] = prefix + lepname
-                self.modname2pdg[prefix + lepname] = -idxadd + lepidx
-                antial_idxs.append(-idxadd + lepidx)
-
-        # Don't add aliases for electrons just the particles
-        self.pdg2modname[-11] = 'e+'
-        self.pdg2modname[11] = 'e-'
-        self.modname2pdg['e-'] = 11
-        self.modname2pdg['e+'] = 11
-
-        self.leptons = al_idxs + antial_idxs + [11, -11] + [22]
+        if not use_pdg:
+            return [self.modid2modname[pid] for pid in self._lepton_range]
+        else:
+            return [self.modid2pdg[pid] for pid in self._lepton_range]
 
     def list_mesons(self, use_pdg=False):
         """Returns list of meson names or PDG IDs.
@@ -432,9 +367,9 @@ class InteractionModelParticleTable():
           list: list of meson names or PDG IDs
         """
         if not use_pdg:
-            return [self.modid2modname[pid] for pid in self.meson_range]
+            return [self.modid2modname[pid] for pid in self._meson_range]
         else:
-            return [self.modid2pdg[pid] for pid in self.meson_range]
+            return [self.modid2pdg[pid] for pid in self._meson_range]
 
     def list_baryons(self, use_pdg=False):
         """Returns list of baryon names or PDG IDs.
@@ -446,9 +381,9 @@ class InteractionModelParticleTable():
           list: list of baryon names or PDG IDs
         """
         if not use_pdg:
-            return [self.modid2modname[pid] for pid in self.baryon_range]
+            return [self.modid2modname[pid] for pid in self._baryon_range]
         else:
-            return [self.modid2pdg[pid] for pid in self.baryon_range]
+            return [self.modid2pdg[pid] for pid in self._baryon_range]
 
 
 class SibyllParticleTable(InteractionModelParticleTable):
@@ -459,7 +394,13 @@ class SibyllParticleTable(InteractionModelParticleTable):
     """
 
     def __init__(self):
-        self.part_table = {
+        # : Internal variable to track indices of mesons, bayons and leptons in model ID
+        self._lepton_range = []
+        self._meson_range = []
+        self._baryon_range = []
+
+        # : hand-crafted particle table that maps name, PDG ID and model ID
+        part_table = {
             'gamma': (1, 22),
             'e+': (2, -11),
             'e-': (3, 11),
@@ -537,29 +478,26 @@ class SibyllParticleTable(InteractionModelParticleTable):
             'OmegaC0': (99, 4332)
         }
 
-        self.baryon_range = []
+        for _, (modid, pdgid) in six.iteritems(part_table):
+            if (abs(pdgid) > 10 and abs(pdgid) < 20) or pdgid == 22:
+                self._lepton_range.append(modid)
+        self._lepton_range.sort()
+
         temp_dict = {}
-        for name, (modid, pdgid) in six.iteritems(self.part_table):
+        for name, (modid, pdgid) in six.iteritems(part_table):
             if (abs(pdgid) > 1000) and (abs(pdgid) < 7000):
                 temp_dict[name + '-bar'] = (-modid, -pdgid)
-                self.baryon_range.append(modid)
-                self.baryon_range.append(-modid)
-            # if abs(modid) > 58:
-            #     temp_dict['QCD_']
-        self.baryon_range.sort()
-        self.part_table.update(temp_dict)
+                self._baryon_range.append(modid)
+                self._baryon_range.append(-modid)
+        self._baryon_range.sort()
+        part_table.update(temp_dict)
 
-        self.meson_range = []
-        # Force tau leptons into the meson group, since the tau lepton has
-        # similar behavior to mesons in current applications of this module
-
-        for name, (modid, pdgid) in six.iteritems(self.part_table):
-            if (modid not in self.baryon_range and
-                (abs(pdgid) > 100 or abs(pdgid) == 15 or abs(pdgid) == 22)):
-                self.meson_range.append(modid)
-        self.meson_range.sort()
-
-        InteractionModelParticleTable.__init__(self)
+        self._meson_range = []
+        for name, (modid, pdgid) in six.iteritems(part_table):
+            if (modid not in self._baryon_range and (abs(pdgid) > 100)):
+                self._meson_range.append(modid)
+        self._meson_range.sort()
+        InteractionModelParticleTable.__init__(self, part_table)
 
 
 class UrQMDParticleTable(InteractionModelParticleTable):
@@ -572,7 +510,13 @@ class UrQMDParticleTable(InteractionModelParticleTable):
     """
 
     def __init__(self):
-        self.part_table = {
+        # : Internal variable to track indices of mesons, bayons and leptons in model ID
+        self._lepton_range = []
+        self._meson_range = []
+        self._baryon_range = []
+
+        # : hand-crafted particle table that maps name, PDG ID and model ID
+        part_table = {
             'gamma': ((100, 0), 22),
             'pi0': ((101, 0), 111),
             'pi+': ((101, 2), 211),
@@ -638,34 +582,31 @@ class UrQMDParticleTable(InteractionModelParticleTable):
             # 'XiC*0': (98, 4314),
             # 'OmegaC0': (99, 4332)
         }
+        
+        for _, (modid, pdgid) in six.iteritems(part_table):
+            if (abs(pdgid) > 10 and abs(pdgid) < 20) or pdgid == 22:
+                self._lepton_range.append(modid)
+        self._lepton_range.sort()
 
-        self.baryon_range = []
         temp_dict = {}
-        for name, (modid, pdgid) in six.iteritems(self.part_table):
+        for name, (modid, pdgid) in six.iteritems(part_table):
             if (abs(pdgid) > 1000) and (abs(pdgid) < 7000):
                 if type(modid) == int:
                     temp_dict[name + '-bar'] = (-modid, -pdgid)
                 else:
                     temp_dict[name + '-bar'] = ((-modid[0], modid[1]), -pdgid)
-                self.baryon_range.append(modid)
-                self.baryon_range.append(-modid if type(modid) == int else (
+                self._baryon_range.append(modid)
+                self._baryon_range.append(-modid if type(modid) == int else (
                     -modid[0], modid[1]))
-            # if abs(modid) > 58:
-            #     temp_dict['QCD_']
-        self.baryon_range.sort()
-        self.part_table.update(temp_dict)
+        self._baryon_range.sort()
+        part_table.update(temp_dict)
 
-        self.meson_range = []
-        # Force tau leptons into the meson group, since the tau lepton has
-        # similar behavior to mesons in current applications of this module
+        for name, (modid, pdgid) in six.iteritems(part_table):
+            if modid not in self._baryon_range and abs(pdgid) > 100:
+                self._meson_range.append(modid)
+        self._meson_range.sort()
 
-        for name, (modid, pdgid) in six.iteritems(self.part_table):
-            if (modid not in self.baryon_range and
-                (abs(pdgid) > 100 or abs(pdgid) == 15 or abs(pdgid) == 22)):
-                self.meson_range.append(modid)
-        self.meson_range.sort()
-
-        InteractionModelParticleTable.__init__(self)
+        InteractionModelParticleTable.__init__(self, part_table)
 
 
 class QGSJetParticleTable(InteractionModelParticleTable):
@@ -684,7 +625,13 @@ class QGSJetParticleTable(InteractionModelParticleTable):
     charge_tab = {}
 
     def __init__(self):
-        self.part_table = {
+        # : Internal variable to track indices of mesons, bayons and leptons in model ID
+        self._lepton_range = []
+        self._meson_range = []
+        self._baryon_range = []
+
+        # : hand-crafted particle table that maps name, PDG ID and model ID
+        part_table = {
             'pi0': (0, 111),
             'pi+': (1, 211),
             'pi-': (-1, -211),
@@ -708,23 +655,26 @@ class QGSJetParticleTable(InteractionModelParticleTable):
             'rho0': (-10, 113)
         }
 
+        for _, (modid, pdgid) in six.iteritems(part_table):
+            if (abs(pdgid) > 10 and abs(pdgid) < 20) or pdgid == 22:
+                self._lepton_range.append(modid)
+        self._lepton_range.sort()
+
         pytab = PYTHIAParticleData()
-        self.baryon_range = []
         temp_dict = {}
-        for (modid, pdgid) in self.part_table.itervalues():
+        for (modid, pdgid) in part_table.itervalues():
             self.charge_tab[modid] = pytab.charge(pdgid)
             if (abs(pdgid) > 1000) and (abs(pdgid) < 7000):
-                self.baryon_range.append(modid)
-        self.baryon_range.sort()
-        self.part_table.update(temp_dict)
+                self._baryon_range.append(modid)
+        self._baryon_range.sort()
+        part_table.update(temp_dict)
 
-        self.meson_range = []
-        for (modid, pdgid) in self.part_table.itervalues():
-            if modid not in self.baryon_range and abs(pdgid) > 100:
-                self.meson_range.append(modid)
-        self.meson_range.sort()
+        for (modid, pdgid) in part_table.itervalues():
+            if modid not in self._baryon_range and abs(pdgid) > 100:
+                self._meson_range.append(modid)
+        self._meson_range.sort()
 
-        InteractionModelParticleTable.__init__(self)
+        InteractionModelParticleTable.__init__(self, part_table)
 
 
 #===============================================================================
@@ -743,6 +693,9 @@ class DpmJetParticleTable(SibyllParticleTable):
 
     def __init__(self):
         SibyllParticleTable.__init__(self)
+        self._lepton_range = [self.modid2pdg[l] for l in self._lepton_range]
+        self._meson_range = [self.modid2pdg[m] for m in self._meson_range]
+        self._baryon_range = [self.modid2pdg[b] for b in self._baryon_range]
         self.modid2modname = self.pdg2modname
         self.mod_ids = [self.modid2pdg[sid] for sid in self.mod_ids]
         self.modid2pdg = {}
@@ -757,8 +710,8 @@ def print_stable(min_life_time=1e-10, pdata=None, title=None, **kwargs):
         pdata = PYTHIAParticleData()
 
     if title is None:
-        print('Known particles which lifetimes longer than {0:1.0e} s:'
-              .format(min_life_time), **kwargs)
+        print('Known particles which lifetimes longer than {0:1.0e} s:'.format(
+            min_life_time), **kwargs)
     else:
         print(title, **kwargs)
     print('{0:20} {1:>10} {2:>8}'.format('Name', 'ctau [cm]', 'PDG ID'),
@@ -768,19 +721,22 @@ def print_stable(min_life_time=1e-10, pdata=None, title=None, **kwargs):
     for pid, pd in make_stable_list(min_life_time, pdata, full_record=True):
         if pd.name in rows:
             pid2 = rows[pd.name][2]
-            if (((pid2 > 0 and pid > 0) or (pid2 < 0 and pid < 0)) and
-                abs(pid2) < abs(pid)):
+            if (((pid2 > 0 and pid > 0) or (pid2 < 0 and pid < 0))
+                    and abs(pid2) < abs(pid)):
                 continue
         rows[pd.name] = (pd.name, pd.ctau, pid)
     v = rows.values()
+
     def cmp_name(a, b):
         return -1 if a[0] < b[0] else (1 if a[0] > b[0] else 0)
+
     def cmp_ctau(a, b):
         if a[1] == b[1]:
             return cmp_name(a, b)
         if a[1] < b[1]:
             return -1
         return 1
+
     v.sort(cmp_ctau)
     for row in v:
         print(templ.format(*row), **kwargs)
@@ -809,11 +765,15 @@ def print_decay_channels(pid, pdata=None, **kwargs):
         print("{0} is stable".format(pname), **kwargs)
 
 
-def make_stable_list(min_life_time, pdata=None, full_record=False):
+def make_stable_list(min_life_time,
+                     pdata=None,
+                     full_record=False,
+                     return_aliases=False):
     """Returns a list of particles PDG IDs with a lifetime longer than
     specified argument value in s. Stable particles, such as photons,
     neutrinos, nucleons and electrons are not included. If full_record
-    is set to true, tuples of PDG IDs and particle data are returned."""
+    is set to true, tuples of PDG IDs and particle data are returned.
+    Aliases are not returned by default."""
 
     if pdata is None:
         pdata = PYTHIAParticleData()
@@ -822,6 +782,9 @@ def make_stable_list(min_life_time, pdata=None, full_record=False):
 
     for pid, pd in pdata.iteritems():
         ctau = pd.ctau
+        # Do not return aliases
+        if not return_aliases and abs(pid) > 7000:
+            continue
         if ctau >= min_life_time * c_speed_of_light and ctau < 1e30:
             if full_record:
                 particle_list.append((pid, pd))
