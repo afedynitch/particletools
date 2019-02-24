@@ -171,6 +171,13 @@ class PYTHIAParticleData(object):
     def __getitem__(self, pid_or_name):
         return self._particle_data[pid_or_name]
 
+    def _pdgid_from_pid_or_name(self, pid_or_name):
+        """Return PDG ID if PDG ID or name are suuplied"""
+
+        return(pid_or_name if isinstance(pid_or_name, six.integer_types) else 
+            self._particle_data.name2id(pid_or_name))
+
+
     def iteritems(self):
         """Returns an iterator over PDG IDs and particle data"""
         return six.iteritems(self._particle_data._data)
@@ -209,11 +216,8 @@ class PYTHIAParticleData(object):
         Returns:
           (list): (BR-ratio,[prod1, prod2, ...])
         """
-        if isinstance(pid_or_name, six.integer_types):
-            return self._branchings[pid_or_name]
-        else:
-            i = self._particle_data.name2id(pid_or_name)
-            return self._branchings[i]
+        pdg_id = self._pdgid_from_pid_or_name(pid_or_name)
+        return self._branchings[pdg_id]
 
     def mass(self, pid_or_name):
         """Returns particle mass in GeV. The mass is calculated from
@@ -255,16 +259,31 @@ class PYTHIAParticleData(object):
         Args:
           pid_or_name: particle PDG ID or string ID
         """
-        import math
 
         d = self._particle_data[pid_or_name]
-        pdg_id = pid_or_name \
-            if isinstance(pid_or_name, six.integer_types) else \
-            self._particle_data.name2id(pid_or_name)
+        pdg_id = self._pdgid_from_pid_or_name(pid_or_name)
 
         self._particle_data[pdg_id] = ParticleData(d.name, d.mass,
                                                    float('Inf'), d.charge)
 
+    def is_lepton(self, pid_or_name):
+        """Return `True` if particle is a lepton.
+        
+        Note::
+            A photon is a lepton here for practical reasons.
+        """
+        pdg_id = self._pdgid_from_pid_or_name(pid_or_name)
+        return (abs(pdg_id) > 10 and abs(pdg_id) < 20) or pdg_id == 22
+
+    def is_hadron(self, pid_or_name):
+        """Return `True` if particle is a hadron."""
+        pdg_id = self._pdgid_from_pid_or_name(pid_or_name)
+        return not self.is_lepton(pdg_id) and (100 < abs(pdg_id) < 7000)
+
+    def is_nucleus(self, pid_or_name):
+        """Return `True` if particle is a nucleus."""
+        pdg_id = self._pdgid_from_pid_or_name(pid_or_name)
+        return abs(pdg_id) > 1000000000
 
 class InteractionModelParticleTable():
     """This abstract class provides conversions from interaction model
