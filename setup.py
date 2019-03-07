@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 def setup_package():
     long_description = ''.join(open('README.rst').readlines()[4:])
