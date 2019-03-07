@@ -322,7 +322,7 @@ class InteractionModelParticleTable():
 
         # Unify particle names according to PYTHIA data base
         _pytab = PYTHIAParticleData()
-        for modname in self.part_table:
+        for modname in self.part_table.keys():
             pdgid = self.part_table[modname][1]
             self.part_table[_pytab.name(pdgid)] = self.part_table.pop(modname)
 
