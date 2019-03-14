@@ -133,12 +133,12 @@ class PYTHIAParticleData(object):
                     mWidth = float(attr['mWidth'])
                     ctau = GeVfm / (mWidth) * 1e-15 * 100.0  # in cm
                 # what is this about? (HD)
-                elif pdg_id in (4314, 4324, 311, 433):
-                    ctau = 0.0
                 elif mass == 0.0 or pdg_id in (11, 12, 14, 16, 22, 2212):
                     ctau = float('Inf')
+                # elif pdg_id in (4314, 4324, 311, 433):
                 else:
-                    ctau = float("NaN")
+                    ctau = 0.0
+                    # ctau = float("NaN")
 
                 self._particle_data[pdg_id] = PData(attr['name'], mass, ctau,
                                                     charge)
