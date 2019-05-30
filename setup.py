@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup
 
-__version__ = "1.1.2"
+__version__ = "1.1.3"
 
 def setup_package():
     long_description = ''.join(open('README.rst').readlines()[4:])
@@ -27,6 +27,7 @@ def setup_package():
             'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
             'Programming Language :: Python :: 3.6',
+            'Programming Language :: Python :: 3.7',
             'Topic :: Scientific/Engineering :: Physics',
             'Intended Audience :: Science/Research',
             'Development Status :: 4 - Beta',
