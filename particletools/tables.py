@@ -685,14 +685,14 @@ class QGSJetParticleTable(InteractionModelParticleTable):
 
         pytab = PYTHIAParticleData()
         temp_dict = {}
-        for (modid, pdgid) in part_table.itervalues():
+        for (modid, pdgid) in six.itervalues(part_table):
             self.charge_tab[modid] = pytab.charge(pdgid)
             if (abs(pdgid) > 1000) and (abs(pdgid) < 7000):
                 self._baryon_range.append(modid)
         self._baryon_range.sort()
         part_table.update(temp_dict)
 
-        for (modid, pdgid) in part_table.itervalues():
+        for (modid, pdgid) in six.itervalues(part_table):
             if modid not in self._baryon_range and abs(pdgid) > 100:
                 self._meson_range.append(modid)
         self._meson_range.sort()
@@ -805,9 +805,6 @@ def make_stable_list(min_life_time,
 
     for pid, pd in pdata.iteritems():
         ctau = pd.ctau
-        # Do not return aliases
-        if not return_aliases and abs(pid) > 7000:
-            continue
         if ctau >= min_life_time * c_speed_of_light and ctau < 1e30:
             if full_record:
                 particle_list.append((pid, pd))
