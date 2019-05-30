@@ -352,9 +352,6 @@ class InteractionModelParticleTable():
             set(self.modname2pdg.keys())) == len(
                 self.mod_ids)), "InteractionModelParticleTable error 3."
 
-        # Add index extensions/aliases for leptons
-        # self._extend_tables()
-
         self.leptons = [l for l in self.list_leptons(use_pdg=True)]
 
         self.mesons = [
@@ -792,13 +789,11 @@ def print_decay_channels(pid, pdata=None, **kwargs):
 
 def make_stable_list(min_life_time,
                      pdata=None,
-                     full_record=False,
-                     return_aliases=False):
+                     full_record=False):
     """Returns a list of particles PDG IDs with a lifetime longer than
     specified argument value in s. Stable particles, such as photons,
     neutrinos, nucleons and electrons are not included. If full_record
-    is set to true, tuples of PDG IDs and particle data are returned.
-    Aliases are not returned by default."""
+    is set to true, tuples of PDG IDs and particle data are returned."""
 
     if pdata is None:
         pdata = PYTHIAParticleData()
