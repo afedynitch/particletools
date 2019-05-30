@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from setuptools import setup
+import setuptools
+from distutils.core import setup
 
 __version__ = "1.1.3"
 
