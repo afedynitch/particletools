@@ -5,7 +5,7 @@ from distutils.core import setup
 __version__ = "1.1.4"
 
 def setup_package():
-    long_description = ''.join(open('README.rst').readlines()[4:])
+    long_description = ''.join(open('README.md').readlines()[4:])
 
     arguments = dict(
         name='particletools',
@@ -15,7 +15,7 @@ def setup_package():
         description='Translating particle codes from CR models from/to PDG codes',
         long_description=long_description,
         license="MIT",
-        url='https://github.com/afedynitch/ParticleDataTool',
+        url='https://github.com/afedynitch/particletools',
         package_dir={'particletools': 'particletools'},
         packages=['particletools'],
         install_requires=['setuptools'],
