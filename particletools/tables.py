@@ -545,13 +545,9 @@ class UrQMDParticleTable(InteractionModelParticleTable):
             'K0': ((106, -1), 311),
             'K-': ((-106, -1), -321),
             'K0-bar': ((-106, 1), -311),
-            # 'K0L': (11, 130),
-            # 'K0S': (12, 310),
             'p': ((1, 1), 2212),
-            # 'p-bar': ((-1, -1), -2212),
             'n': ((1, -1), 2112),
             'eta': ((102, 0), 221),
-            # 'eta*': ((1), 331),
             'rho+': ((104, 2), 213),
             'rho-': ((104, -2), -213),
             'rho0': ((104, 0), 113),
@@ -591,18 +587,6 @@ class UrQMDParticleTable(InteractionModelParticleTable):
             'D*0': ((134, 0), 10421),
             'D*0-bar': ((-134, 0), -10421),
             'jpsi': ((135, 0), 443),
-            # 'SigmaC++': (84, 4222),
-            # 'SigmaC+': (85, 4212),
-            # 'SigmaC0': (86, 4112),
-            # 'XiC+': (87, 4232),
-            # 'XiC0': (88, 4132),
-            # 'LambdaC+': (89, 4122),
-            # 'SigmaC*++': (94, 4224),
-            # 'SigmaC*+': (95, 4214),
-            # 'SigmaC*0': (96, 4114),
-            # 'XiC*+': (97, 4324),
-            # 'XiC*0': (98, 4314),
-            # 'OmegaC0': (99, 4332)
         }
         
         for _, (modid, pdgid) in six.iteritems(part_table):
@@ -782,7 +766,7 @@ def print_decay_channels(pid, pdata=None, **kwargs):
                 except KeyError:
                     prod_list.append('*' + str(p))
             prod_list = ', '.join(prod_list)
-            print("\t{0:10}%, {1}".format(br * 100., prod_list), **kwargs)
+            print("\t{0:10g}%, {1}".format(br * 100., prod_list), **kwargs)
     else:
         print("{0} is stable".format(pname), **kwargs)
 

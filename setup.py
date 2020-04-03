@@ -2,7 +2,7 @@
 import setuptools
 from distutils.core import setup
 
-__version__ = "1.1.3"
+__version__ = "1.1.4"
 
 def setup_package():
     long_description = ''.join(open('README.rst').readlines()[4:])
