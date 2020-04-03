@@ -122,6 +122,5 @@ def test_print_decay_channels():
 
 def test_make_stable_list():
     assert tables.make_stable_list(1e-6) == [
-            13, 2112, 7013, -7313, 7113, -7213, 7313,
-            -7013, -7113, 7213, -2112, -13
+            13, -13, 2112, -2112
         ]

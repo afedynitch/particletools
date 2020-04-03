@@ -37,6 +37,12 @@ jobs:
         python setup.py bdist_wheel --universal
       displayName: 'Make wheel'
 
+    - script: |
+        pip install pytest pytest-azurepipelines
+        pip install .
+        pytest
+      displayName: 'pytest'
+
     - task: PublishPipelineArtifact@0
       inputs:
         artifactName: 'artifact'

@@ -712,6 +712,7 @@ class DpmJetParticleTable(SibyllParticleTable):
 def print_stable(min_life_time=1e-10, pdata=None, title=None, **kwargs):
     """Prints a list of particles with a lifetime longer than
     specified argument value in s."""
+    from functools import cmp_to_key
     if pdata is None:
         pdata = PYTHIAParticleData()
 
@@ -731,7 +732,7 @@ def print_stable(min_life_time=1e-10, pdata=None, title=None, **kwargs):
                     and abs(pid2) < abs(pid)):
                 continue
         rows[pd.name] = (pd.name, pd.ctau, pid)
-    v = rows.values()
+    v = list(rows.values())
 
     def cmp_name(a, b):
         return -1 if a[0] < b[0] else (1 if a[0] > b[0] else 0)
@@ -743,7 +744,7 @@ def print_stable(min_life_time=1e-10, pdata=None, title=None, **kwargs):
             return -1
         return 1
 
-    v.sort(cmp_ctau)
+    v.sort(key=cmp_to_key(cmp_ctau))
     for row in v:
         print(templ.format(*row), **kwargs)
 
