@@ -1,7 +1,8 @@
 ![PyPI](https://img.shields.io/pypi/v/particletools)
-[![Documentation](https://readthedocs.org/projects/particletools/badge/?version=latest)](https://particletools.readthedocs.io/en/latest/?badge=latest)
-<!-- [![Build Status](https://dev.azure.com/afedynitch/MCEq/_apis/build/status/afedynitch.MCEq?branchName=master)](https://dev.azure.com/afedynitch/MCEq/_build/latest?definitionId=1&branchName=master)
-![Azure DevOps releases](https://img.shields.io/azure-devops/release/afedynitch/e02bcbf5-db8e-4417-ad07-cc2547ea47e0/6/6) -->
+[![Documentation](https://readthedocs.org/projects/particledatatool/badge/?version=latest)](https://particledatatool.readthedocs.io/en/latest/?badge=latest)
+![Azure DevOps builds](https://img.shields.io/azure-devops/build/afedynitch/MCEq/6)
+![Azure DevOps tests](https://img.shields.io/azure-devops/tests/afedynitch/MCEq/6)
+<!-- ![Azure DevOps releases](https://img.shields.io/azure-devops/release/afedynitch/e02bcbf5-db8e-4417-ad07-cc2547ea47e0/6/6) -->
 
 
 
