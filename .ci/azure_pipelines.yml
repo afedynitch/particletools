@@ -9,6 +9,7 @@ trigger:
   branches:
     include:
       - master
+      - 'refs/tags/*'
     exclude:
       - next_*
 pr:
@@ -16,7 +17,7 @@ pr:
 
 jobs:
   
-- job: 'Package'
+- job: 'Package and test'
   pool:
     vmImage: 'ubuntu-latest'
   steps:
