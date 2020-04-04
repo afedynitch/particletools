@@ -17,7 +17,7 @@ pr:
 
 jobs:
   
-- job: 'Package and test'
+- job: 'Package'
   pool:
     vmImage: 'ubuntu-latest'
   steps:
