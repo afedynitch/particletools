@@ -2,7 +2,7 @@
 import setuptools
 from distutils.core import setup
 
-__version__ = "1.1.6"
+__version__ = "1.1.7"
 
 
 def setup_package():
@@ -32,9 +32,8 @@ def setup_package():
         url='https://github.com/afedynitch/particletools',
         package_dir={'particletools': 'particletools'},
         packages=['particletools'],
-        install_requires=['setuptools'],
+        install_requires=['setuptools', 'six'],
         tests_require=['pytest'],
-        py_modules=["six"],
         package_data={'particletools': ['ParticleData.xml']},
         classifiers=[
             'Programming Language :: Python',
